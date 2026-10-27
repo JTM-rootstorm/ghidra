@@ -443,6 +443,22 @@ bool PrintC::checkAddressOfCast(const PcodeOp *op) const
 void PrintC::opFunc(const PcodeOp *op)
 
 {
+  // GhIDA: CONCAT/SUB/ZEXT/SEXT build bits. When the result is a float,
+  // assigning those bits to it in C would convert their integer value, so
+  // reinterpret them (BITCAST_<type>, defined in include/ghida/decomp.h).
+  OpCode opc = op->code();
+  if ((opc == CPUI_PIECE || opc == CPUI_SUBPIECE || opc == CPUI_INT_ZEXT || opc == CPUI_INT_SEXT) &&
+      op->getOut() != (Varnode *)0 && !bitcastWrapped) {
+    Datatype *outt = op->getOut()->getHighTypeDefFacing();
+    if (outt->getMetatype() == TYPE_FLOAT) {
+      pushOp(&function_call,op);
+      pushAtom(Atom("BITCAST_" + outt->getDisplayName(),optoken,EmitMarkup::no_color,op));
+      bitcastWrapped = true;
+      opFunc(op);
+      bitcastWrapped = false;
+      return;
+    }
+  }
   pushOp(&function_call,op);
   // Using function syntax but don't markup the name as
   // a normal function call
@@ -474,6 +490,19 @@ void PrintC::opTypeCast(const PcodeOp *op)
       pushVn(op->getIn(0),op,mods);
       return;
     }
+  }
+  // GhIDA: a CAST op keeps the bits (unlike the conversions that also print
+  // through here). Between a float and a non-float of the same size, a C
+  // cast would convert the value instead, so print it as a reinterpretation
+  // (BITCAST_<type>, defined in include/ghida/decomp.h).
+  Datatype *in = op->getIn(0)->getHighTypeReadFacing(op);
+  bool tofloat = dt->getMetatype() == TYPE_FLOAT, fromfloat = in->getMetatype() == TYPE_FLOAT;
+  if (op->code() == CPUI_CAST && tofloat != fromfloat && dt->getSize() == in->getSize() &&
+      dt->getMetatype() != TYPE_PTR && in->getMetatype() != TYPE_PTR) {
+    pushOp(&function_call,op);
+    pushAtom(Atom("BITCAST_" + dt->getDisplayName(),optoken,EmitMarkup::no_color,op));
+    pushVn(op->getIn(0),op,mods);
+    return;
   }
   if (!option_nocasts) {
     pushOp(&typecast,op);
@@ -888,7 +917,9 @@ void PrintC::opSubpiece(const PcodeOp *op)
       // Fall thru to functional printing
     }
   }
-  if (castStrategy->isSubpieceCast(op->getOut()->getHighTypeDefFacing(),
+  // GhIDA: a truncation to a float is a reinterpretation, never a C cast.
+  if (op->getOut()->getHighTypeDefFacing()->getMetatype() != TYPE_FLOAT &&
+      castStrategy->isSubpieceCast(op->getOut()->getHighTypeDefFacing(),
 				   op->getIn(0)->getHighTypeReadFacing(op),
 				   (uint4)op->getIn(1)->getOffset()))
     opTypeCast(op);
@@ -1481,6 +1512,12 @@ void PrintC::push_float(uintb val,int4 sz,tagtype tag,const Varnode *vn,const Pc
 	  token += ".0";	// Force token to look like a floating-point value
 	}
       }
+      // GhIDA: a C literal without suffix is a double, so arithmetic on a
+      // float would be done in double precision when recompiled.
+      if (sz == 4)
+	token += 'f';
+      else if (sz > 8)
+	token += 'L';
     }
   }
   pushAtom(Atom(token,tag,EmitMarkup::const_color,op,vn,val));

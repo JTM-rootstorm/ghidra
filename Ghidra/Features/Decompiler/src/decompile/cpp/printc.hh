@@ -334,6 +334,7 @@ public:
   virtual void opMultiequal(const PcodeOp *op) {}
   virtual void opIndirect(const PcodeOp *op) {}
   virtual void opPiece(const PcodeOp *op) { opFunc(op); }
+  bool bitcastWrapped = false;	///< GhIDA: opFunc is printing the inside of a BITCAST
   virtual void opSubpiece(const PcodeOp *op);
   virtual void opCast(const PcodeOp *op) { opTypeCast(op); }
   virtual void opPtradd(const PcodeOp *op);
