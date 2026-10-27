@@ -127,7 +127,6 @@ class Funcdata {
   BlockBasic *nodeSplitBlockEdge(BlockBasic *b,int4 inedge);
 
   void sortCallSpecs(void);			///< Sort calls using a dominance based order
-  void deleteCallSpecs(PcodeOp *op);		///< Remove the specification for a particular call
   void clearCallSpecs(void);			///< Remove all call specifications
   void issueDatatypeWarning(Datatype *dt);	///< Add any warning header for the given data-type
 
@@ -135,6 +134,7 @@ class Funcdata {
   static void encodeVarnode(Encoder &encoder,VarnodeLocSet::const_iterator iter,VarnodeLocSet::const_iterator enditer);
   static bool checkIndirectUse(Varnode *vn);
 public:
+  void deleteCallSpecs(PcodeOp *op);		///< Remove the specification for a particular call (GhIDA: public for idiom rules)
   Funcdata(const string &nm,const string &disp,Scope *conf,const Address &addr,FunctionSymbol *sym,int4 sz=0);	///< Constructor
   ~Funcdata(void);							///< Destructor
   const string &getName(void) const { return name; }			///< Get the function's local symbol name
