@@ -512,12 +512,32 @@ void Override::CallReturn::performOverride(const Address &addr,Funcdata &data) c
   if (op == (PcodeOp *)0 || !op->isDead())
     throw LowlevelError("Could not apply CALL_RETURN override");
   OpCode opc = op->code();
+  if (opc == CPUI_CBRANCH) {
+    // GhIDA: a conditional tail call. The instruction's ops become
+    //   CBRANCH <rel: CALL>, cond; BRANCH <rel: end of instruction>;
+    //   CALL target; RETURN 0
+    // so the taken path calls and returns and the other falls through.
+    PcodeOp *last = *(--data.endOpDead());
+    PcodeOp *skip = data.newOp(1,addr);
+    data.opSetOpcode(skip,CPUI_BRANCH);
+    PcodeOp *call = data.newOp(1,addr);
+    data.opSetOpcode(call,CPUI_CALL);
+    data.opSetInput(call,data.newCodeRef(op->getIn(0)->getAddr()),0);
+    PcodeOp *ret = data.newOp(1,addr);
+    data.opSetOpcode(ret,CPUI_RETURN);
+    data.opSetInput(ret,data.newConstant(1,0),0);
+    data.opDeadInsertAfter(skip,last);
+    data.opDeadInsertAfter(call,skip);
+    data.opDeadInsertAfter(ret,call);
+    int4 sz = op->getIn(0)->getSize();
+    data.opSetInput(op,data.newConstant(sz,call->getTime() - op->getTime()),0);
+    data.opSetInput(skip,data.newConstant(sz,ret->getTime() + 1 - skip->getTime()),0);
+    return;
+  }
   if (opc == CPUI_BRANCH)
     data.opSetOpcode(op,CPUI_CALL);
   else if (opc == CPUI_BRANCHIND)
     data.opSetOpcode(op,CPUI_CALLIND);
-  else if (opc == CPUI_CBRANCH)
-    throw LowlevelError("Do not currently support CBRANCH overrides");
   else if (opc == CPUI_RETURN)
     data.opSetOpcode(op,CPUI_CALLIND);
   PcodeOp *newReturn = data.newOp(1,addr);
