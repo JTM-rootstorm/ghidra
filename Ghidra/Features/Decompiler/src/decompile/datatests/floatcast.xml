@@ -38,12 +38,12 @@ ffffffffffffff7f0000000000000000
 </script>
 <stringmatch name="Floating-point cast #1" min="1" max="1">fVar1 = \(float8\)a;</stringmatch>
 <stringmatch name="Floating-point cast #2" min="1" max="1">fVar2 = \(float8\)b;</stringmatch>
-<stringmatch name="Floating-point cast #3" min="1" max="1">fVar1 = 1\.1234567812345;</stringmatch>
-<stringmatch name="Floating-point cast #4" min="1" max="1">fVar2 = 1\.12345678;</stringmatch>
+<stringmatch name="Floating-point cast #3" min="1" max="1">fVar1 = 1\.1234567812345[fL]?;</stringmatch>
+<stringmatch name="Floating-point cast #4" min="1" max="1">fVar2 = 1\.12345678[fL]?;</stringmatch>
 <stringmatch name="Floating-point cast #5" min="1" max="1">return \(float4\)\(fVar1 \- fVar2\);</stringmatch>
 <stringmatch name="Floating-point cast #6" min="1" max="1">fVar1 = \(float8\)c;</stringmatch>
 <stringmatch name="Floating-point cast #7" min="1" max="1">fVar2 = \(float8\)d;</stringmatch>
-<stringmatch name="Floating-point cast #8" min="1" max="1">fVar1 = 9\.8765432198765;</stringmatch>
-<stringmatch name="Floating-point cast #9" min="1" max="1">fVar2 = 9\.87654321;</stringmatch>
+<stringmatch name="Floating-point cast #8" min="1" max="1">fVar1 = 9\.8765432198765[fL]?;</stringmatch>
+<stringmatch name="Floating-point cast #9" min="1" max="1">fVar2 = 9\.87654321[fL]?;</stringmatch>
 <stringmatch name="Floating-point cast #10" min="1" max="1">return.*\-fVar1 &lt; ABS\(fVar2\)</stringmatch>
 </decompilertest>
