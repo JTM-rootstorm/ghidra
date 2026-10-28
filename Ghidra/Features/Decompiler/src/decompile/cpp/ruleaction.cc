@@ -208,6 +208,191 @@ int4 RuleSelectCse::applyOp(PcodeOp *op,Funcdata &data)
   return 1;
 }
 
+/// \class RuleIntrinsicLanes
+/// \brief Lane semantics of 128-bit userops named after SSE intrinsics (`_mm_*`)
+///
+/// The userops hide which lanes they read, so two things the lane-by-lane p-code
+/// gave for free are restored here:
+///   - `_mm_cmpeq_epi32(V,V) => _mm_cmpeq_epi32(#0,#0)` (likewise cmpgt, sub, subs):
+///     the result does not depend on V, which may be an uninitialized register.
+///   - An input that is a function input or a join of lanes is narrowed to the
+///     low bytes its uses need, `_mm_shuffle_ps(V,V,#0xe0) => _mm_shuffle_ps(zext(V:4),#0,#0xe0)`
+///     when only the low 8 bytes of the result are read, so unread lanes of an
+///     XMM parameter do not make it a 16-byte input.
+void RuleIntrinsicLanes::getOpList(vector<uint4> &oplist) const
+
+{
+  oplist.push_back(CPUI_CALLOTHER);
+}
+
+/// \return the lane size in bytes from the intrinsic's suffix, or 0 if it has none
+int4 RuleIntrinsicLanes::laneSize(const string &nm)
+
+{
+  string::size_type pos = nm.rfind('_');
+  string suf = nm.substr(pos + 1);
+  if (suf == "epi8" || suf == "epu8") return 1;
+  if (suf == "epi16" || suf == "epu16") return 2;
+  if (suf == "epi32" || suf == "epu32") return 4;
+  if (suf == "epi64") return 8;
+  return 0;
+}
+
+/// \brief Bytes of the given input slot read to produce the needed bytes of the output
+///
+/// \param nm is the intrinsic's name
+/// \param op is the CALLOTHER
+/// \param slot is the input slot (1 or 2)
+/// \param outNeed is a mask of the needed output bytes
+/// \return a mask of the needed input bytes
+uint4 RuleIntrinsicLanes::inputLanes(const string &nm,PcodeOp *op,int4 slot,uint4 outNeed)
+
+{
+  Varnode *immvn = op->getIn(op->numInput() - 1);
+  int4 imm = immvn->isConstant() ? (int4)immvn->getOffset() : -1;
+  uint4 need = 0;
+  int4 w = laneSize(nm);
+  if (nm.compare(0,13,"_mm_unpacklo_") == 0 || nm.compare(0,13,"_mm_unpackhi_") == 0) {
+    int4 half = (nm[10] == 'h') ? 8 / w : 0;
+    for(int4 j=0;j<16/w;++j) {
+      if (((outNeed >> (j * w)) & ((1u << w) - 1)) == 0) continue;
+      if ((j & 1) + 1 != slot) continue;
+      need |= ((1u << w) - 1) << ((j / 2 + half) * w);
+    }
+    return need;
+  }
+  if (nm == "_mm_shuffle_epi32" || nm == "_mm_shuffle_ps") {
+    if (imm < 0) return 0xffff;
+    for(int4 i=0;i<4;++i) {
+      if (((outNeed >> (i * 4)) & 0xf) == 0) continue;
+      int4 src = (nm == "_mm_shuffle_ps" && i >= 2) ? 2 : 1;
+      if (src != slot) continue;
+      need |= 0xfu << (((imm >> (2 * i)) & 3) * 4);
+    }
+    return need;
+  }
+  if (nm == "_mm_shufflelo_epi16" || nm == "_mm_shufflehi_epi16") {
+    if (imm < 0) return 0xffff;
+    int4 base = (nm[11] == 'h') ? 4 : 0;
+    for(int4 i=0;i<8;++i) {
+      if (((outNeed >> (i * 2)) & 3) == 0) continue;
+      int4 src = (i >= base && i < base + 4) ? base + ((imm >> (2 * (i - base))) & 3) : i;
+      need |= 3u << (src * 2);
+    }
+    return need;
+  }
+  if (nm == "_mm_slli_si128" || nm == "_mm_srli_si128") {
+    if (imm < 0) return 0xffff;
+    for(int4 i=0;i<16;++i) {
+      if ((outNeed & (1u << i)) == 0) continue;
+      int4 src = (nm[5] == 'l') ? i - imm : i + imm;
+      if (src >= 0 && src < 16) need |= 1u << src;
+    }
+    return need;
+  }
+  static const char *lanewise[] = { "_mm_add_", "_mm_sub_", "_mm_cmpeq_", "_mm_cmpgt_", "_mm_adds_", "_mm_subs_",
+				    "_mm_avg_", "_mm_min_", "_mm_max_", "_mm_mullo_", "_mm_mulhi_", "_mm_slli_",
+				    "_mm_srli_", "_mm_srai_", "_mm_sll_", "_mm_srl_", "_mm_sra_" };
+  for(int4 k=0;k<17;++k) {
+    if (nm.compare(0,strlen(lanewise[k]),lanewise[k]) != 0) continue;
+    if (w == 0) return 0xffff;
+    if (k >= 14 && slot == 2)		// Shift count: the low 8 bytes
+      return outNeed != 0 ? 0xff : 0;
+    for(int4 j=0;j<16/w;++j)
+      if (((outNeed >> (j * w)) & ((1u << w) - 1)) != 0)
+	need |= ((1u << w) - 1) << (j * w);
+    return need;
+  }
+  return 0xffff;
+}
+
+/// \brief Bytes of a 16-byte Varnode that its uses read
+///
+/// \param vn is the Varnode
+/// \param data is the function
+/// \param depth bounds the search through further intrinsics and bitwise operators
+/// \return a mask with a bit per needed byte
+uint4 RuleIntrinsicLanes::neededBytes(Varnode *vn,Funcdata &data,int4 depth)
+
+{
+  if (vn->getSize() != 16 || depth > 6) return 0xffff;
+  uint4 need = 0;
+  list<PcodeOp *>::const_iterator iter;
+  for(iter=vn->beginDescend();iter!=vn->endDescend();++iter) {
+    PcodeOp *op = *iter;
+    switch(op->code()) {
+    case CPUI_SUBPIECE:
+      need |= (((1u << op->getOut()->getSize()) - 1) << op->getIn(1)->getOffset()) & 0xffff;
+      break;
+    case CPUI_INT_AND:
+    case CPUI_INT_OR:
+    case CPUI_INT_XOR:
+    case CPUI_INT_NEGATE:
+      need |= neededBytes(op->getOut(),data,depth + 1);
+      break;
+    case CPUI_CALLOTHER:
+    {
+      const string &nm(data.getArch()->userops.getOp(op->getIn(0)->getOffset())->getName());
+      if (nm.compare(0,4,"_mm_") != 0 || op->getOut() == (Varnode *)0) return 0xffff;
+      uint4 outNeed = neededBytes(op->getOut(),data,depth + 1);
+      for(int4 slot=1;slot<op->numInput() && slot<=2;++slot)
+	if (op->getIn(slot) == vn)
+	  need |= inputLanes(nm,op,slot,outNeed);
+      break;
+    }
+    default:
+      return 0xffff;
+    }
+    if (need == 0xffff) break;
+  }
+  return need;
+}
+
+int4 RuleIntrinsicLanes::applyOp(PcodeOp *op,Funcdata &data)
+
+{
+  Varnode *outvn = op->getOut();
+  if (outvn == (Varnode *)0 || outvn->getSize() != 16 || op->numInput() < 2) return 0;
+  const string &nm(data.getArch()->userops.getOp(op->getIn(0)->getOffset())->getName());
+  if (nm.compare(0,4,"_mm_") != 0) return 0;
+  if (op->numInput() >= 3 && op->getIn(1) == op->getIn(2) && !op->getIn(1)->isConstant() &&
+      (nm.compare(0,10,"_mm_cmpeq_") == 0 || nm.compare(0,10,"_mm_cmpgt_") == 0 ||
+       nm.compare(0,8,"_mm_sub_") == 0 || nm.compare(0,9,"_mm_subs_") == 0)) {
+    data.opSetInput(op,data.newConstant(16,0),1);
+    data.opSetInput(op,data.newConstant(16,0),2);
+    return 1;
+  }
+  uint4 outNeed = neededBytes(outvn,data,0);
+  if (outNeed == 0xffff) return 0;
+  for(int4 slot=1;slot<op->numInput() && slot<=2;++slot) {
+    Varnode *vn = op->getIn(slot);
+    if (vn->isConstant() || vn->getSize() != 16) continue;
+    if (!vn->isInput() && !(vn->isWritten() && vn->getDef()->code() == CPUI_PIECE)) continue;
+    uint4 need = inputLanes(nm,op,slot,outNeed);
+    if (need == 0) {
+      data.opSetInput(op,data.newConstant(16,0),slot);
+      return 1;
+    }
+    int4 sz = 1;
+    while(sz < 16 && (need >> sz) != 0) sz *= 2;
+    if (sz >= 16) continue;
+    PcodeOp *subop = data.newOp(2,op->getAddr());
+    data.opSetOpcode(subop,CPUI_SUBPIECE);
+    Varnode *lo = data.newUniqueOut(sz,subop);
+    data.opSetInput(subop,vn,0);
+    data.opSetInput(subop,data.newConstant(4,0),1);
+    data.opInsertBefore(subop,op);
+    PcodeOp *extop = data.newOp(1,op->getAddr());
+    data.opSetOpcode(extop,CPUI_INT_ZEXT);
+    Varnode *ext = data.newUniqueOut(16,extop);
+    data.opSetInput(extop,lo,0);
+    data.opInsertBefore(extop,op);
+    data.opSetInput(op,ext,slot);
+    return 1;
+  }
+  return 0;
+}
+
 /// \class RulePiece2Zext
 /// \brief Concatenation with 0 becomes an extension:  `V = concat(#0,W)  =>  V = zext(W)`
 void RulePiece2Zext::getOpList(vector<uint4> &oplist) const

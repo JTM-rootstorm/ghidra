@@ -119,6 +119,19 @@ public:
   virtual void getOpList(vector<uint4> &oplist) const;
   virtual int4 applyOp(PcodeOp *op,Funcdata &data);
 };
+class RuleIntrinsicLanes : public Rule {
+  static int4 laneSize(const string &nm);
+  static uint4 inputLanes(const string &nm,PcodeOp *op,int4 slot,uint4 outNeed);
+  static uint4 neededBytes(Varnode *vn,Funcdata &data,int4 depth);
+public:
+  RuleIntrinsicLanes(const string &g) : Rule(g, 0, "intrinsiclanes") {}	///< Constructor
+  virtual Rule *clone(const ActionGroupList &grouplist) const {
+    if (!grouplist.contains(getGroup())) return (Rule *)0;
+    return new RuleIntrinsicLanes(getGroup());
+  }
+  virtual void getOpList(vector<uint4> &oplist) const;
+  virtual int4 applyOp(PcodeOp *op,Funcdata &data);
+};
 class RulePiece2Zext : public Rule {
 public:
   RulePiece2Zext(const string &g) : Rule(g, 0, "piece2zext") {}	///< Constructor

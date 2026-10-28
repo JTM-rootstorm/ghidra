@@ -485,6 +485,18 @@ Datatype *TypeOpLoad::getOutputToken(const PcodeOp *op,CastStrategy *castStrateg
   return op->getOut()->getHighTypeDefFacing();
 }
 
+/// \brief Is the given data-type a vector-width integer (an SSE/NEON register's bits)
+///
+/// Such a value read from or written to memory says how wide the access was, not
+/// what the pointer points to, so it should not give the pointer its data-type.
+static bool isVectorScalar(Datatype *ct)
+
+{
+  if (ct->getSize() <= 8) return false;
+  type_metatype meta = ct->getMetatype();
+  return (meta == TYPE_INT || meta == TYPE_UINT || meta == TYPE_UNKNOWN);
+}
+
 Datatype *TypeOpLoad::propagateType(Datatype *alttype,PcodeOp *op,Varnode *invn,Varnode *outvn,
 				    int4 inslot,int4 outslot)
 {
@@ -492,6 +504,7 @@ Datatype *TypeOpLoad::propagateType(Datatype *alttype,PcodeOp *op,Varnode *invn,
   if (invn->isSpacebase()) return (Datatype *)0;
   Datatype *newtype;
   if (inslot == -1) {	 // Propagating output to input (value to ptr)
+    if (isVectorScalar(alttype)) return (Datatype *)0;	// Vector width, not the element type
     AddrSpace *spc = op->getIn(0)->getSpaceFromConst();
     newtype = propagateToPointer(tlst,alttype,outvn->getSize(),spc->getWordSize());
   }
@@ -563,6 +576,7 @@ Datatype *TypeOpStore::propagateType(Datatype *alttype,PcodeOp *op,Varnode *invn
   if (invn->isSpacebase()) return (Datatype *)0;
   Datatype *newtype;
   if (inslot==2) {		// Propagating value to ptr
+    if (isVectorScalar(alttype)) return (Datatype *)0;	// Vector width, not the element type
     AddrSpace *spc = op->getIn(0)->getSpaceFromConst();
     newtype = propagateToPointer(tlst,alttype,outvn->getSize(),spc->getWordSize());
   }

@@ -5990,6 +5990,7 @@ void ActionDatabase::universalAction(Architecture *conf)
 	actprop->addRule( new RuleLessOne("analysis") );
 	actprop->addRule( new RuleRangeMeld("analysis") );
 	actprop->addRule( new RuleFloatRange("analysis") );
+	actprop->addRule( new RuleIntrinsicLanes("analysis") );
 	actprop->addRule( new RulePiece2Zext("analysis") );
 	actprop->addRule( new RulePiece2Sext("analysis") );
 	actprop->addRule( new RulePopcountBoolXor("analysis") );

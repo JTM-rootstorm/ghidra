@@ -184,8 +184,15 @@ bool RangeHint::attemptJoin(RangeHint *b)
   }
   if (highind < 0) return false;
   Datatype *settype = type;					// Assume we will keep this data-type
-  if (settype->getAlignSize() != b->type->getAlignSize()) return false;
-  if (settype != b->type) {
+  if (settype->getAlignSize() != b->type->getAlignSize()) {
+    // A vector-sized integer (SSE lanes) over an array of smaller integers keeps the array
+    type_metatype am = settype->getMetatype();
+    type_metatype bm = b->type->getMetatype();
+    if (b->type->getSize() <= 8 || b->type->getSize() % settype->getAlignSize() != 0) return false;
+    if (am != TYPE_INT && am != TYPE_UINT) return false;
+    if (bm != TYPE_INT && bm != TYPE_UINT && bm != TYPE_UNKNOWN) return false;
+  }
+  else if (settype != b->type) {
     Datatype *aTestType = type;
     Datatype *bTestType = b->type;
     while(aTestType->getMetatype() == TYPE_PTR) {
