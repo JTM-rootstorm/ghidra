@@ -4313,6 +4313,8 @@ int4 RuleStoreVarnode::applyOp(PcodeOp *op,Funcdata &data)
 
   size = op->getIn(2)->getSize();
   offoff = AddrSpace::addressToByte(offoff,baseoff->getWordSize());
+  // A store running past the end of a space that cannot wrap stays a STORE
+  if (!baseoff->allowsWrappedRange() && baseoff->getHighest() - offoff + 1 < (uintb)size) return 0;
   Address addr(baseoff,offoff);
   data.newVarnodeOut(size, addr,op);
   op->getOut()->setStackStore();	// Mark as originally coming from CPUI_STORE
