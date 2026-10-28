@@ -453,6 +453,15 @@ void PrintC::opFunc(const PcodeOp *op)
     if (outt->getMetatype() == TYPE_FLOAT) {
       pushOp(&function_call,op);
       pushAtom(Atom("BITCAST_" + outt->getDisplayName(),optoken,EmitMarkup::no_color,op));
+      // The low bytes of an integer are its truncation, a C cast.
+      Datatype *in = op->getIn(0)->getHighTypeReadFacing(op);
+      if (opc == CPUI_SUBPIECE && op->getIn(1)->getOffset() == 0 &&
+	  (in->getMetatype() == TYPE_INT || in->getMetatype() == TYPE_UINT || in->getMetatype() == TYPE_UNKNOWN)) {
+	pushOp(&typecast,op);
+	pushType(glb->types->getBase(outt->getSize(),TYPE_UINT));
+	pushVn(op->getIn(0),op,mods);
+	return;
+      }
       bitcastWrapped = true;
       opFunc(op);
       bitcastWrapped = false;

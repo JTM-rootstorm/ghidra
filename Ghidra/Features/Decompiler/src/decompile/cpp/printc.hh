@@ -187,10 +187,10 @@ protected:
   void emitLocalVarDecls(const Funcdata *fd);		///< Emit variable declarations for a function
   void emitStatement(const PcodeOp *inst);		///< Emit a statement in the body of a function
   bool emitInplaceOp(const PcodeOp *op);		///< Attempt to emit an expression rooted at an \e in-place operator
-  void emitGotoStatement(const FlowBlock *bl,const FlowBlock *exp_bl,uint4 type);
+  virtual void emitGotoStatement(const FlowBlock *bl,const FlowBlock *exp_bl,uint4 type);
   void emitSwitchCase(int4 casenum,const BlockSwitch *switchbl);	///< Emit labels for a \e case block
   void emitLabel(const FlowBlock *bl);			///< Emit a formal label for a given control-flow block
-  void emitLabelStatement(const FlowBlock *bl);		///< Emit any required label statement for a given basic block
+  virtual void emitLabelStatement(const FlowBlock *bl);		///< Emit any required label statement for a given basic block
   void emitAnyLabelStatement(const FlowBlock *bl);	///< Emit any required label statement for a given control-flow block
   void emitCommentGroup(const PcodeOp *inst);		///< Emit comments associated with a given statement
   void emitCommentBlockTree(const FlowBlock *bl);	///< Emit any comments under the given control-flow subtree
