@@ -2174,9 +2174,10 @@ void PrintC::pushMismatchSymbol(const Symbol *sym,int4 off,int4 sz,
   // the type (or size) incorrectly
   // The address of the symbol is correct, but the size is too small
 
-  // We prepend an underscore to indicate a close
-  // but not quite match
-    string nm = '_'+sym->getDisplayName();
+  // GhIDA: read it as C would, through a pointer of the access's size at
+  // the symbol (an underscored name is declared nowhere)
+    Datatype *ct = glb->types->getBase(sz,TYPE_UNKNOWN);
+    string nm = "(*(" + ct->getDisplayName() + " *)&" + sym->getDisplayName() + ")";
     pushAtom(Atom(nm,vartoken,EmitMarkup::var_color,op,vn));
   }
   else

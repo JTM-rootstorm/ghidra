@@ -1144,8 +1144,14 @@ MapEntry *ActionConstantPtr::isPointer(AddrSpace *spc,Varnode *vn,PcodeOp *op,in
     if (spc->getPointerUpperBound() < vn->getOffset())
       return (MapEntry *)0;
     // Check if the constant looks like a single bit or mask
-    if (bit_transitions(vn->getOffset(),vn->getSize()) < 3)
-      return (MapEntry *)0;
+    // GhIDA: unless it is exactly where a symbol starts (a page-aligned
+    // table in an image loaded at 0)
+    if (bit_transitions(vn->getOffset(),vn->getSize()) < 3) {
+      Address at(spc,AddrSpace::addressToByte(vn->getOffset(),spc->getWordSize()));
+      MapEntry *hit = glb->symboltab->getGlobalScope()->queryContainer(at,1,Address());
+      if (hit == (MapEntry *)0 || hit->getAddr() != at)
+	return (MapEntry *)0;
+    }
     rampoint = glb->resolveConstant(spc,vn->getOffset(),vn->getSize(),op->getAddr(),fullEncoding);
   }
 
