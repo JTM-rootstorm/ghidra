@@ -6424,7 +6424,11 @@ void AddTreeState::calcSubtype(void)
     int8 extra;
     // Get offset into mapped variable
     bool foundSymbol = false;
-    if (biggestNonMultCoeff != 0)
+    // An offset inside a structure indexes that structure, not an array nearby
+    Datatype *container = baseType->getSubType(offsetbytes,&extra);
+    if (container != (Datatype *)0 && container->getMetatype() == TYPE_STRUCT)
+      foundSymbol = true;
+    if (!foundSymbol && biggestNonMultCoeff != 0)
       foundSymbol = baseType->nearestArrayedComponent(offsetbytes, biggestNonMultCoeff, &extra);
     if (!foundSymbol)
       foundSymbol = (baseType->getSubType(offsetbytes,&extra) != (Datatype *)0);
