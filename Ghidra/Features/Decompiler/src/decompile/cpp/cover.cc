@@ -376,6 +376,7 @@ bool Cover::intersect(const PcodeOpSet &opSet,Varnode *rep) const
 	opIndex += 1;
       } while(opIndex < opMax);
       if (setBlock >= opSet.blockStart.size()) break;
+      setIndex = opSet.opList[opIndex]->getParent()->getIndex();	// The next block of the set
     }
   }
   return false;
