@@ -154,6 +154,18 @@ void Override::insertFlowOverride(const Address &addr,const string &type)
   pcodeover[addr] = rec;
 }
 
+/// GhIDA: overrides the analysis defines itself (an unwind edge after a call)
+/// \param addr is the address of the instruction
+/// \param rec is the record, owned from here on
+void Override::insertPCodeOverride(const Address &addr,Record *rec)
+
+{
+  map<Address,Record *>::iterator iter = pcodeover.find(addr);
+  if (iter != pcodeover.end())
+    delete (*iter).second;
+  pcodeover[addr] = rec;
+}
+
 /// \brief Change a CALL, CALLIND, or CALLOTHER instruction into a CALL with the specified destination address
 ///
 /// \param addr is the address of the instruction

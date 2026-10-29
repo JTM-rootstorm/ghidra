@@ -336,11 +336,11 @@ PcodeOp *FlowInfo::xrefControlFlow(list<PcodeOp *>::const_iterator oiter,bool &s
       startbasic = true;
       break;
     case CPUI_CALL:
-      if (setupCallSpecs(op,fc))
+      if (setupCallSpecs(op,fc) && *prev(oiter) != op)	// GhIDA: unless ops follow the call
 	--oiter;		// Backup one op, to pickup halt
       break;
     case CPUI_CALLIND:
-      if (setupCallindSpecs(op,fc))
+      if (setupCallindSpecs(op,fc) && *prev(oiter) != op)
 	--oiter;		// Backup one op, to pickup halt
       break;
     case CPUI_CALLOTHER:
@@ -656,7 +656,13 @@ bool FlowInfo::checkForFlowModification(FuncCallSpecs &fspecs)
   if (fspecs.isNoReturn()) {
     PcodeOp *op = fspecs.getOp();
     PcodeOp *haltop = artificialHalt(op->getAddr(),PcodeOp::noreturn);
-    data.opDeadInsertAfter(haltop,op);
+    // GhIDA: ops an override placed after the call (an unwind edge to a
+    // landing pad) stay ahead of the halt.
+    PcodeOp *prev = op;
+    list<PcodeOp *>::const_iterator iter = op->getInsertIter();
+    for(++iter;iter!=obank.endDead() && *iter!=haltop && (*iter)->getAddr()==op->getAddr();++iter)
+      prev = *iter;
+    data.opDeadInsertAfter(haltop,prev);
     if (!fspecs.isInline())
       data.warning("Subroutine does not return",op->getAddr());
     return true;

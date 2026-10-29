@@ -429,6 +429,22 @@ UserPcodeOp *UserOpManage::getOp(const string &nm) const
 /// instantiate a default form of the record.
 /// \param i is the index associated
 /// \return the matching user-op record
+/// GhIDA: the analysis marks control flow the instructions do not show (an
+/// exception unwinding to its landing pad) with CALLOTHERs of its own.
+/// \param nm is the name of the op
+/// \param out is the data-type of its output
+/// \return the CALLOTHER index of the op, registered once per name
+int4 UserOpManage::registerDatatypeOp(const string &nm,Datatype *out)
+
+{
+  UserPcodeOp *op = getOp(nm);
+  if (op != (UserPcodeOp *)0)
+    return op->getIndex();
+  int4 ind = useroplist.size();
+  registerOp(new DatatypeUserOp(nm,glb,ind,out));
+  return ind;
+}
+
 UserPcodeOp *UserOpManage::registerBuiltin(uint4 i)
 
 {

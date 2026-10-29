@@ -340,6 +340,7 @@ public:
   UserPcodeOp *getOp(const string &nm) const;	///< Retrieve description by name
 
   UserPcodeOp *registerBuiltin(uint4 i);	///< Make sure an active record exists for the given built-in op
+  int4 registerDatatypeOp(const string &nm,Datatype *out);	///< GhIDA: add a user op the spec lacks, with its output type
 
   /// Retrieve a segment-op description object by index
   /// \param i is the index

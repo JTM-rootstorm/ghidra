@@ -165,6 +165,7 @@ public:
   void insertProtoOverride(const Address &callpoint,FuncProto *p);
   void insertMultistageJump(const Address &addr);
   void insertFlowOverride(const Address &addr,const string &type);
+  void insertPCodeOverride(const Address &addr,Record *rec);	///< GhIDA: take a p-code override record (owned)
   void insertDestinationOverride(const Address &addr,const Address &dest,const string &type);
 
   void applyPrototype(Funcdata &data,FuncCallSpecs &fspecs) const;
