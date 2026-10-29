@@ -897,6 +897,24 @@ void PrintC::opFloatInt2Float(const PcodeOp *op)
   pushVn(vn0,op,mods);
 }
 
+void PrintC::opFloatTrunc(const PcodeOp *op)
+
+{
+  // GhIDA: the conversion is to a signed integer; into a variable of
+  // another type it goes through that one, as (uint)f would not for a
+  // negative f.
+  Datatype *dt = op->getOut()->getHighTypeDefFacing();
+  if (option_nocasts || dt->getMetatype() == TYPE_INT) {
+    opTypeCast(op);
+    return;
+  }
+  pushOp(&typecast,op);
+  pushType(dt);
+  pushOp(&typecast,op);
+  pushType(glb->types->getBase(op->getOut()->getSize(),TYPE_INT));
+  pushVn(op->getIn(0),op,mods);
+}
+
 void PrintC::opSubpiece(const PcodeOp *op)
 
 {

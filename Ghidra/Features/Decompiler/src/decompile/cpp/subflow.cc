@@ -3428,6 +3428,11 @@ bool SubfloatFlow::traceBackward(TransformVar *rvn)
       if (vn->getSize() == precision)
 	newvar = newConstant(precision, 0, vn->getOffset());
       else {
+	// GhIDA: a wider constant only if the narrower format holds it exactly
+	const FloatFormat *form2 = getFunction()->getArch()->translate->getFloatFormat(vn->getSize());
+	if (vn->getSize() > precision && (form2 == (const FloatFormat *)0 ||
+	    form2->convertEncoding(format->convertEncoding(vn->getOffset(),form2),format) != vn->getOffset()))
+	  return false;
 	newvar = setReplacement(vn);	// Convert constant to precision size
 	if (newvar == (TransformVar *)0)
 	  return false;			// Unsupported float format
@@ -3435,6 +3440,9 @@ bool SubfloatFlow::traceBackward(TransformVar *rvn)
     }
     else {
       if (vn->isFree()) return false;
+      // GhIDA: an operand wider than the logical value (a double extended
+      // beside a float, `f * d`) would lose its precision
+      if (vn->getSize() > precision) return false;
       opc = (vn->getSize() == precision) ? CPUI_COPY : CPUI_FLOAT_FLOAT2FLOAT;
       newvar = getPreexistingVarnode(vn);
     }

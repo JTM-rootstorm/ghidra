@@ -745,7 +745,10 @@ uint4 ParamListStandard::assignAddressFallback(type_class resource,Datatype *tp,
 	continue;			// Wrong type
     }
 
-    param.addr = curEntry.getAddrBySlot(status[grp],tp->getAlignSize(),tp->getAlignment(),glb);
+    // GhIDA: a single-slot entry (a register) holds the value's bytes, not the padding an
+    // array element would take (x87's 10-byte long double in the 10-byte ST0)
+    int4 sz = curEntry.getAlign() == 0 ? tp->getSize() : tp->getAlignSize();
+    param.addr = curEntry.getAddrBySlot(status[grp],sz,tp->getAlignment(),glb);
     if (param.addr.isInvalid()) continue; // If -tp- doesn't fit an invalid address is returned
     if (curEntry.isExclusion()) {
       const vector<int4> &groupSet(curEntry.getAllGroups());
