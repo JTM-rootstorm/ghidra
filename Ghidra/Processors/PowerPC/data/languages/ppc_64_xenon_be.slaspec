@@ -1,0 +1,12 @@
+# SLA specification for the Xenon (Xbox 360): 64-bit PowerPC with VMX and
+# VMX128, 32-bit addresses. No VSX: its encodings overlap the Xenon's.
+
+@define ENDIAN "big"
+@define REGISTER_SIZE "8"
+@define BIT_64 "64"
+@define EATRUNC "ea:4"
+@define XENON "1"
+
+@include "ppc_common.sinc"
+@include "altivec.sinc"
+@include "xenon.sinc"

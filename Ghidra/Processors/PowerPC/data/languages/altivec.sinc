@@ -1231,6 +1231,8 @@ define pcodeop altv300_69;
 define pcodeop altv300_70;
 define pcodeop altv300_71;
 
+# Not on the Xenon: its VMX128 encodings overlap them.
+@ifndef XENON
 #################
 # 2.07 additions
 :bcdadd. vrD,vrA,vrB,PS		is OP=4 & BIT_10=1 & XOP_0_8=1 & vrA & vrB & vrD & PS {
@@ -1790,3 +1792,4 @@ define pcodeop altv300_71;
 	temp = temp + zext(vrA[32,32])*zext(vrB[32,32]);
 	vrD = temp;
 }
+@endif
