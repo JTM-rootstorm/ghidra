@@ -773,6 +773,9 @@ define pcodeop invlpg;
 define pcodeop invlpga;
 define pcodeop invpcid;
 define pcodeop rdtscp;
+define pcodeop RINT;       # round to integer in the current (default: nearest even) mode
+define pcodeop TRUNC;      # round toward zero, to an integer-valued float
+define pcodeop x87_round;  # round to integer as the control word's rounding field says
 define pcodeop mwait;
 define pcodeop mwaitx;
 define pcodeop monitor;
@@ -5786,21 +5789,21 @@ define pcodeop ffree;
 :FIST m16       is vexMode=0 & byte=0xDF; (mod != 0b11 & reg_opcode=2) ... & m16            
 { 
     FPUInstructionPointer = inst_start;
-    tmp:10 = round(ST0);
+    tmp:10 = x87_round(ST0, FPUControlWord);
     m16 = trunc(tmp); 
 }                    
 
 :FIST m32       is vexMode=0 & byte=0xDB; (mod != 0b11 & reg_opcode=2) ... & m32            
 { 
     FPUInstructionPointer = inst_start;
-    tmp:10 = round(ST0); 
+    tmp:10 = x87_round(ST0, FPUControlWord);
     m32 = trunc(tmp); 
 }            
 
 :FISTP m16      is vexMode=0 & byte=0xDF; reg_opcode=3 ... & m16            
 { 
     FPUInstructionPointer = inst_start;
-    tmp:10 = round(ST0); 
+    tmp:10 = x87_round(ST0, FPUControlWord);
     fpop(); 
     m16 = trunc(tmp); 
 }                
@@ -5808,7 +5811,7 @@ define pcodeop ffree;
 :FISTP m32      is vexMode=0 & byte=0xDB; reg_opcode=3 ... & m32
 { 
     FPUInstructionPointer = inst_start;
-    tmp:10 = round(ST0);
+    tmp:10 = x87_round(ST0, FPUControlWord);
     fpop();
     m32 = trunc(tmp); 
 }                
@@ -5816,7 +5819,7 @@ define pcodeop ffree;
 :FISTP m64      is vexMode=0 & byte=0xDF; reg_opcode=7 ... & m64  
 {
     FPUInstructionPointer = inst_start;
-    tmp:10 = round(ST0); 
+    tmp:10 = x87_round(ST0, FPUControlWord);
     fpop(); 
     m64 = trunc(tmp); 
 }                
@@ -6013,7 +6016,7 @@ define pcodeop fpatan;
 {
     FPUInstructionPointer = inst_start;
     local tmp = ST0 f/ ST1;
-    tmp = round(tmp);
+    tmp = RINT(tmp);
     tmp = tmp f* ST1;
     ST0 = ST0 f- tmp;
 }
@@ -6031,7 +6034,7 @@ define pcodeop fptan;
 :FRNDINT        is vexMode=0 & byte=0xD9; byte=0xFC                 
 { 
     FPUInstructionPointer = inst_start;
-    local tmp = round(ST0);
+    local tmp:10 = x87_round(ST0, FPUControlWord);
     ST0 = tmp; 
 }
 
@@ -7099,39 +7102,39 @@ CMPSS_OPERAND: ", "^imm8 is imm8   { }
 :CVTPS2PI     mmxreg, m64         is vexMode=0 &  mandover=0 & byte=0x0F; byte=0x2D; mmxreg ... & m64
 {
   local m:8 = m64;
-  mmxreg[0,32] = round(m[0,32]);
-  mmxreg[32,32] = round(m[32,32]);
+  local lo:4 = RINT(m[0,32]); mmxreg[0,32] = trunc(lo);
+  local hi:4 = RINT(m[32,32]); mmxreg[32,32] = trunc(hi);
   FPUTagWord = 0x0000;         
 }
 
 :CVTPS2PI     mmxreg1, XmmReg2    is vexMode=0 &  mandover=0 & byte=0x0F; byte=0x2D; xmmmod=3 & mmxreg1 & XmmReg2
 {
-  mmxreg1[0,32] = round(XmmReg2[0,32]);
-  mmxreg1[32,32] = round(XmmReg2[32,32]);
+  local lo:4 = RINT(XmmReg2[0,32]); mmxreg1[0,32] = trunc(lo);
+  local hi:4 = RINT(XmmReg2[32,32]); mmxreg1[32,32] = trunc(hi);
   FPUTagWord = 0x0000;         
 }
 
 :CVTSD2SI     Reg32, m64    is vexMode=0 & $(PRE_F2) & byte=0x0F; byte=0x2D; (Reg32 & check_Reg32_dest) ... & m64
 {
-  Reg32 = trunc(round(m64));
+  local r:8 = RINT(m64); Reg32 = trunc(r);
   build check_Reg32_dest;
 }
 
 :CVTSD2SI     Reg32, XmmReg2 is vexMode=0 & $(PRE_F2) & byte=0x0F; byte=0x2D; xmmmod=3 & Reg32 & check_Reg32_dest & XmmReg2
 {
-  Reg32 = trunc(round(XmmReg2[0,64]));
+  local r:8 = RINT(XmmReg2[0,64]); Reg32 = trunc(r);
   build check_Reg32_dest;
 }
 
 @ifdef IA64
 :CVTSD2SI     Reg64, m64    is $(LONGMODE_ON) & vexMode=0 & opsize=2 & $(PRE_F2) & byte=0x0F; byte=0x2D; Reg64 ... & m64
 {
-  Reg64 = trunc(round(m64));
+  local r:8 = RINT(m64); Reg64 = trunc(r);
 }
 
 :CVTSD2SI     Reg64, XmmReg2 is vexMode=0 & opsize=2 & $(PRE_F2) & byte=0x0F; byte=0x2D; xmmmod=3 & Reg64 & XmmReg2
 {
-  Reg64 = trunc(round(XmmReg2[0,64]));
+  local r:8 = RINT(XmmReg2[0,64]); Reg64 = trunc(r);
 }
 @endif
 
@@ -7181,25 +7184,25 @@ CMPSS_OPERAND: ", "^imm8 is imm8   { }
 
 :CVTSS2SI     Reg32, m32    is vexMode=0 & $(PRE_F3) & byte=0x0F; byte=0x2D; (Reg32 & check_Reg32_dest) ... & m32
 {
-  Reg32 = trunc(round(m32));
+  local r:4 = RINT(m32); Reg32 = trunc(r);
   build check_Reg32_dest;
 }
 
 :CVTSS2SI     Reg32, XmmReg2 is vexMode=0 & $(PRE_F3) & byte=0x0F; byte=0x2D; xmmmod=3 & Reg32 & check_Reg32_dest & XmmReg2
 {
-  Reg32 = trunc(round(XmmReg2[0,32]));
+  local r:4 = RINT(XmmReg2[0,32]); Reg32 = trunc(r);
   build check_Reg32_dest;
 }
 
 @ifdef IA64
 :CVTSS2SI     Reg64, m32    is $(LONGMODE_ON) & vexMode=0 & opsize=2 & $(PRE_F3) & byte=0x0F; byte=0x2D; Reg64 ... & m32
 {
-  Reg64 = trunc(round(m32));
+  local r:4 = RINT(m32); Reg64 = trunc(r);
 }
 
 :CVTSS2SI     Reg64, XmmReg2 is vexMode=0 & opsize=2 & $(PRE_F3) & byte=0x0F; byte=0x2D; xmmmod=3 & Reg64 & XmmReg2
 {
-  Reg64 = trunc(round(XmmReg2[0,32]));
+  local r:4 = RINT(XmmReg2[0,32]); Reg64 = trunc(r);
 }
 @endif
                 
