@@ -1,195 +1,194 @@
 # altivec pcodes are stubbed out with pseudocode calls
-define pcodeop dataStreamStop;
-define pcodeop dataStreamStopAll;
-define pcodeop dataStreamTouch;
-define pcodeop dataStreamTouchSoon;
-define pcodeop dataStreamTouchForStore;
-define pcodeop dataStreamTouchForStoreTransient;
-define pcodeop loadVectorElementByteIndexed;
-define pcodeop loadVectorElementHalfWordIndexed;
-define pcodeop loadVectorElementWordIndexed;
-define pcodeop loadVectorForShiftLeft;
-define pcodeop loadVectorForShiftRight;
-define pcodeop loadVectorIndexed;
-define pcodeop loadVectorIndexedLRU;
-define pcodeop moveFromVectorStatusAndControlRegister;
-define pcodeop moveToVectorStatusAndControlRegister;
-define pcodeop storeVectorElementByteIndexed;
-define pcodeop storeVectorElementHalfWordIndexed;
-define pcodeop storeVectorElementWordIndexed;
+define pcodeop __dss;
+define pcodeop __dssall;
+define pcodeop __dst;
+define pcodeop __dstt;
+define pcodeop __dstst;
+define pcodeop __dststt;
+define pcodeop __lvebx;
+define pcodeop __lvsl;
+define pcodeop __lvsr;
+define pcodeop __lvx;
+define pcodeop __mfvscr;
+define pcodeop __mtvscr;
 define pcodeop storeVectorIndexed;
 define pcodeop storeVectorIndexedLRU;
-define pcodeop vectorAddCarryoutUnsignedWord;
-define pcodeop vectorAddFloatingPoint;
-define pcodeop vectorAddSignedByteSaturate;
-define pcodeop vectorAddSignedHalfWordSaturate;
-define pcodeop vectorAddSignedWordSaturate;
-define pcodeop vectorAddUnsignedByteSaturate;
-define pcodeop vectorAddUnsignedHalfWordModulo;
-define pcodeop vectorSubtractUnsignedHalfWordModulo;
-define pcodeop vectorAddUnsignedWordModulo;
-define pcodeop vectorAddUnsignedByteModulo;
-define pcodeop vectorAddUnsignedHalfWordSaturate;
-define pcodeop vectorAddUnsignedWordSaturate;
-define pcodeop vectorLogicalAnd;
-define pcodeop vectorLogicalAndWithComplement;
-define pcodeop vectorAverageSignedByte;
-define pcodeop vectorAverageSignedHalfWord;
-define pcodeop vectorAverageSignedWord;
-define pcodeop vectorAverageUnsignedByte;
-define pcodeop vectorAverageUnsignedHalfWord;
-define pcodeop vectorAverageUnsignedWord;
-define pcodeop vectorConvertFromSignedFixedPointWord;
-define pcodeop vectorConvertFromUnsignedFixedPointWord;
-define pcodeop vectorCompareBoundsFloatingPoint;
-define pcodeop vectorCompareEqualToFloatingPoint;
-define pcodeop vectorCompareEqualToUnsignedByte;
-define pcodeop vectorCompareEqualToUnsignedHalfWord;
-define pcodeop vectorCompareEqualToUnsignedWord;
-define pcodeop vectorCompareGreaterThanOrEqualToFloatingPoint;
-define pcodeop vectorCompareGreaterThanFloatingPoint;
-define pcodeop vectorCompareGreaterThanSignedByte;
-define pcodeop vectorCompareGreaterThanConditionRegisterSignedHalfWord;
-define pcodeop vectorCompareGreaterThanSignedWord;
-define pcodeop vectorCompareGreaterThanUnsignedByte;
-define pcodeop vectorCompareGreaterThanUnsignedHalfWord;
-define pcodeop vectorCompareGreaterThanUnsignedWord;
-define pcodeop vectorConvertToSignedFixedPointWordSaturate;
-define pcodeop vectorConvertToUnsignedFixedPointWordSaturate;
-define pcodeop vector2RaisedToTheExponentEstimateFloatingPoint;
-define pcodeop vectorLog2EstimateFloatingPoint;
-define pcodeop vectorMultiplyAddFloatingPoint;
-define pcodeop vectorMaximumFloatingPoint;
-define pcodeop vectorMaximumSignedByte;
-define pcodeop vectorMaximumSignedHalfWord;
-define pcodeop vectorMaximumSignedWord;
-define pcodeop vectorMaximumUnsignedByte;
-define pcodeop vectorMaximumUnsignedHalfWord;
-define pcodeop vectorMaximumUnsignedWord;
-define pcodeop vectorMultiplyHighAndAddSignedHalfWordSaturate;
-define pcodeop vectorMultiplyHighRoundAndAddSignedHalfWordSaturate;
-define pcodeop vectorMinimumFloatingPoint;
-define pcodeop vectorMinimumSignedByte;
-define pcodeop vectorMinimumSignedHalfWord;
-define pcodeop vectorMinimumSignedWord;
-define pcodeop vectorMinimumUnsignedByte;
-define pcodeop vectorMinimumUnsignedHalfWord;
-define pcodeop vectorMinimumUnsignedWord;
-define pcodeop vectorMultiplyLowAndAddUnsignedHalfWordModulo;
-define pcodeop vectorMergeHighByte;
-define pcodeop vectorMergeHighHalfWord;
-define pcodeop vectorMergeHighWord;
-define pcodeop vectorMergeLowByte;
-define pcodeop vectorMergeLowHalfWord;
-define pcodeop vectorMergeLowWord;
-define pcodeop vectorMultiplySumMixedSignByteModulo;
-define pcodeop vectorMultiplySumSignedHalfWordModulo;
-define pcodeop vectorMultiplySumSignedHalfWordSaturate;
-define pcodeop vectorMultiplySumUnsignedByteModulo;
-define pcodeop vectorMultiplySumUnsignedHalfWordModulo;
-define pcodeop vectorMultiplySumUnsignedHalfWordSaturate;
-define pcodeop vectorMultiplyEvenSignedByte;
-define pcodeop vectorMultiplyEvenSignedHalfWord;
-define pcodeop vectorMultiplyEvenUnsignedByte;
-define pcodeop vectorMultiplyEvenUnsignedHalfWord;
-define pcodeop vectorMultiplyOddSignedByte;
-define pcodeop vectorMultiplyOddSignedHalfWord;
-define pcodeop vectorMultiplyOddUnsignedByte;
-define pcodeop vectorMultiplyOddUnsignedHalfWord;
-define pcodeop vectorNegativeMultiplySubtractFloatingPoint;
+define pcodeop __vaddcuw;
+define pcodeop __vaddfp;
+define pcodeop __vaddsbs;
+define pcodeop __vaddshs;
+define pcodeop __vaddsws;
+define pcodeop __vaddubs;
+define pcodeop __vadduhm;
+define pcodeop __vsubuhm;
+define pcodeop __vadduwm;
+define pcodeop __vaddubm;
+define pcodeop __vadduhs;
+define pcodeop __vadduws;
+define pcodeop __vand;
+define pcodeop __vandc;
+define pcodeop __vavgsb;
+define pcodeop __vavgsh;
+define pcodeop __vavgsw;
+define pcodeop __vavgub;
+define pcodeop __vavguh;
+define pcodeop __vavguw;
+define pcodeop __vcfsx;
+define pcodeop __vcfux;
+define pcodeop __vcmpbfp;
+define pcodeop __vcmpeqfp;
+define pcodeop __vcmpequb;
+define pcodeop __vcmpequh;
+define pcodeop __vcmpequw;
+define pcodeop __vcmpgefp;
+define pcodeop __vcmpgtfp;
+define pcodeop __vcmpgtsb;
+define pcodeop __vcmpgtsh;
+define pcodeop __vcmpgtsw;
+define pcodeop __vcmpgtub;
+define pcodeop __vcmpgtuh;
+define pcodeop __vcmpgtuw;
+define pcodeop __vctsxs;
+define pcodeop __vctuxs;
+define pcodeop __vexptefp;
+define pcodeop __vlogefp;
+define pcodeop __vmaddfp;
+define pcodeop __vmaxfp;
+define pcodeop __vmaxsb;
+define pcodeop __vmaxsh;
+define pcodeop __vmaxsw;
+define pcodeop __vmaxub;
+define pcodeop __vmaxuh;
+define pcodeop __vmaxuw;
+define pcodeop __vmhaddshs;
+define pcodeop __vmhraddshs;
+define pcodeop __vminfp;
+define pcodeop __vminsb;
+define pcodeop __vminsh;
+define pcodeop __vminsw;
+define pcodeop __vminub;
+define pcodeop __vminuh;
+define pcodeop __vminuw;
+define pcodeop __vmladduhm;
+define pcodeop __vmrghb;
+define pcodeop __vmrghh;
+define pcodeop __vmrghw;
+define pcodeop __vmrglb;
+define pcodeop __vmrglh;
+define pcodeop __vmrglw;
+define pcodeop __vmsummbm;
+define pcodeop __vmsumshm;
+define pcodeop __vmsumshs;
+define pcodeop __vmsumubm;
+define pcodeop __vmsumuhm;
+define pcodeop __vmsumuhs;
+define pcodeop __vmulesb;
+define pcodeop __vmulesh;
+define pcodeop __vmuleub;
+define pcodeop __vmuleuh;
+define pcodeop __vmulosb;
+define pcodeop __vmulosh;
+define pcodeop __vmuloub;
+define pcodeop __vmulouh;
+define pcodeop __vnmsubfp;
 define pcodeop vectorLogicalNOR;
 define pcodeop vectorLogicalOR;
-define pcodeop vectorPackPixel32;
-define pcodeop vectorPackSignedHalfWordSignedSaturate;
-define pcodeop vectorPackSignedHalfWordUnsignedSaturate;
-define pcodeop vectorPackSignedWordSignedSaturate;
-define pcodeop vectorPackSignedWordUnsignedSaturate;
-define pcodeop vectorPackUnsignedHalfWordUnsignedModulo;
-define pcodeop vectorPackUnsignedHalfWordUnsignedSaturate;
-define pcodeop vectorPackUnsignedWordUnsignedModulo;
-define pcodeop vectorPackUnsignedWordUnsignedSaturate;
-define pcodeop vectorReciprocalEstimateFloatingPoint;
-define pcodeop vectorRoundToFloatingPointIntegerTowardMinusInfinity;
-define pcodeop vectorRoundToFloatingPointIntegerNearest;
-define pcodeop vectorRoundToFloatingPointIntegerTowardPluInfinity;
-define pcodeop vectorRoundToFloatingPointIntegerTowardZero;
-define pcodeop vectorRotateLeftIntegerByte;
-define pcodeop vectorRotateLeftIntegerHalfWord;
-define pcodeop vectorRotateLeftIntegerWord;
-define pcodeop vectorReciprocalSquareRootEstimateFloatingPoint;
-define pcodeop vectorConditionalSelect;
-define pcodeop vectorShiftLeft;
-define pcodeop vectorShiftLeftIntegerByte;
-define pcodeop vectorShiftLeftDoubleByOctetImmediate;
-define pcodeop vectorShiftLeftIntegerHalfWord;
-define pcodeop vectorShiftLeftByOctet;
-define pcodeop vectorShiftLeftIntegerWord;
-define pcodeop vectorSplatByte;
-define pcodeop vectorSplatHalfWord;
-define pcodeop vectorSplatImmediateSignedByte;
-define pcodeop vectorSplatImmediateSignedHalfWord;
-define pcodeop vectorSplatImmediateSignedWord;
-define pcodeop vectorSplatWord;
-define pcodeop vectorShiftRight;
-define pcodeop vectorShiftRightAlgebraicByte;
-define pcodeop vectorShiftRightAlgebraicHalfWord;
-define pcodeop vectorShiftRightAlgebraicWord;
-define pcodeop vectorShiftRightByte;
-define pcodeop vectorShiftRightHalfWord;
-define pcodeop vectorShiftRightByOctet;
-define pcodeop vectorShiftRightWord;
-define pcodeop vectorSubtractCarryoutUnsignedWord;
-define pcodeop vectorSubtractFloatingPoint;
-define pcodeop vectorSubtractSignedByteSaturate;
-define pcodeop vectorSubtractSignedHalfWordSaturate;
-define pcodeop vectorSubtractSignedWordSaturate;
-define pcodeop vectorSubtractUnsignedByteModulo;
-define pcodeop vectorSubtractUnsignedByteSaturate;
-define pcodeop vectorSubtractUnsignedHalfWordSaturate;
-define pcodeop vectorSubtractUnsignedWordModulo;
-define pcodeop vectorSubtractUnsignedWordSaturate;
-define pcodeop vectorSumAcrossSignedWordSaturate;
-define pcodeop vectorSumAcrossPartialSignedWordSaturate;
-define pcodeop vectorSumAcrossPartialSignedByteSaturate;
-define pcodeop vectorSumAcrossPartialSignedHalfWordSaturate;
-define pcodeop vectorSumAcrossPartialUnsignedByteSaturate;
-define pcodeop vectorUnpackHighPixel16;
-define pcodeop vectorUnpackHighSignedByte;
-define pcodeop vectorUnpackHighSignedHalfWord;
-define pcodeop vectorUnpackLowPixel16;
-define pcodeop vectorUnpackLowSignedByte;
-define pcodeop vectorUnpackLowSignedHalfWord;
+define pcodeop __vpkpx;
+define pcodeop __vpkshss;
+define pcodeop __vpkshus;
+define pcodeop __vpkswss;
+define pcodeop __vpkswus;
+define pcodeop __vpkuhum;
+define pcodeop __vpkuhus;
+define pcodeop __vpkuwum;
+define pcodeop __vpkuwus;
+define pcodeop __vrefp;
+define pcodeop __vrfim;
+define pcodeop __vrfin;
+define pcodeop __vrfip;
+define pcodeop __vrfiz;
+define pcodeop __vrlb;
+define pcodeop __vrlh;
+define pcodeop __vrlw;
+define pcodeop __vrsqrtefp;
+define pcodeop __vsel;
+define pcodeop __vsl;
+define pcodeop __vslb;
+define pcodeop __vsldoi;
+define pcodeop __vslh;
+define pcodeop __vslo;
+define pcodeop __vslw;
+define pcodeop __vspltb;
+define pcodeop __vsplth;
+define pcodeop __vspltisb;
+define pcodeop __vspltish;
+define pcodeop __vspltisw;
+define pcodeop __vspltw;
+define pcodeop __vsr;
+define pcodeop __vsrab;
+define pcodeop __vsrah;
+define pcodeop __vsraw;
+define pcodeop __vsrb;
+define pcodeop __vsrh;
+define pcodeop __vsro;
+define pcodeop __vsrw;
+define pcodeop __vsubcuw;
+define pcodeop __vsubfp;
+define pcodeop __vsubsbs;
+define pcodeop __vsubshs;
+define pcodeop __vsubsws;
+define pcodeop __vsububm;
+define pcodeop __vsububs;
+define pcodeop __vsubuhs;
+define pcodeop __vsubuwm;
+define pcodeop __vsubuws;
+define pcodeop __vsumsws;
+define pcodeop __vsum2sws;
+define pcodeop __vsum4sbs;
+define pcodeop __vsum4shs;
+define pcodeop __vsum4ubs;
+define pcodeop __vupkhpx;
+define pcodeop __vupkhsb;
+define pcodeop __vupkhsh;
+define pcodeop __vupklpx;
+define pcodeop __vupklsb;
+define pcodeop __vupklsh;
 
 # dss
+# A record-form compare's CR6: all elements true (bit 3) or all false (bit 1).
+macro vectorCompareCR6(v) {
+	cr6 = (zext(~v == 0) << 3) | (zext(v == 0) << 1);
+}
+
 :dss STRM			is $(NOTVLE) & OP=31 & BIT_25=0 & BITS_23_24=0 & STRM & BITS_16_20=0 & BITS_11_15=0 & XOP_1_10=822 & Rc=0
 {
-	dataStreamStop(STRM:1);
+	__dss(STRM:1);
 }
 
 # dssall
 :dssall	STRM		is $(NOTVLE) & OP=31 & BIT_25=1 & BITS_23_24=0 & STRM & BITS_16_20=0 & BITS_11_15=0 & XOP_1_10=822 & Rc=0
 {
-	dataStreamStopAll(STRM:1);
+	__dssall(STRM:1);
 }
 
 :dst A,B,STRM		is $(NOTVLE) & OP=31 & BIT_25=0 & BITS_23_24=0 & STRM & A & B & XOP_1_10=342 & Rc=0
 {
-	dataStreamTouch(A,B,STRM:1);
+	__dst(A,B,STRM:1);
 }
 
 :dstt A,B,STRM		is $(NOTVLE) & OP=31 & BIT_25=1 & BITS_23_24=0 & STRM & A & B & XOP_1_10=342 & Rc=0
 {
-	dataStreamTouchSoon(A,B,STRM:1);
+	__dstt(A,B,STRM:1);
 }
 
 :dstst A,B,STRM		is $(NOTVLE) & OP=31 & BIT_25=0 & BITS_23_24=0 & STRM & A & B & XOP_1_10=374 & Rc=0
 {
-	dataStreamTouchForStore(A,B,STRM:1);
+	__dstst(A,B,STRM:1);
 }
 
 :dststt A,B,STRM	is $(NOTVLE) & OP=31 & BIT_25=1 & BITS_23_24=0 & STRM & A & B & XOP_1_10=374 & Rc=0
 {
-	dataStreamTouchForStoreTransient(A,B,STRM:1);
+	__dststt(A,B,STRM:1);
 }
 
 :lvebx vrD,RA_OR_ZERO,B		is OP=31 & vrD & RA_OR_ZERO & B & XOP_1_10=7 & Rc=0
@@ -204,68 +203,94 @@ define pcodeop vectorUnpackLowSignedHalfWord;
 @endif
 	eb = eb * 8;
 	vrD = (zext(tmpb) << eb);	
-	#vrD = loadVectorElementByteIndexed(A,B);
+	#vrD = __lvebx(A,B);
 }
 
-:lvehx vrD,A,B		is OP=31 & vrD & A & B & XOP_1_10=39 & Rc=0
-{	# TODO defintion
-	vrD = loadVectorElementHalfWordIndexed(A,B);
+:lvehx vrD,RA_OR_ZERO,B		is OP=31 & vrD & RA_OR_ZERO & B & XOP_1_10=39 & Rc=0
+{
+	EA:$(REGISTER_SIZE) = (RA_OR_ZERO + B) & ~1;
+	eb:1 = EA[0,4];
+@if ENDIAN == "big"
+	eb = 0xE - eb;
+@endif
+	vrD = zext(*[ram]:2 EA) << (eb * 8);
 }
 
-:lvewx vrD,A,B		is OP=31 & vrD & A & B & XOP_1_10=71 & Rc=0
-{	# TODO definition
-	vrD = loadVectorElementWordIndexed(A,B);
+:lvewx vrD,RA_OR_ZERO,B		is OP=31 & vrD & RA_OR_ZERO & B & XOP_1_10=71 & Rc=0
+{
+	EA:$(REGISTER_SIZE) = (RA_OR_ZERO + B) & ~3;
+	eb:1 = EA[0,4];
+@if ENDIAN == "big"
+	eb = 0xC - eb;
+@endif
+	vrD = zext(*[ram]:4 EA) << (eb * 8);
 }
 
-:lvsl vrD,A,B		is OP=31 & vrD & A & B & XOP_1_10=6 & Rc=0
-{   # TODO definition
-	vrD = loadVectorForShiftLeft(A,B);
+:lvsl vrD,RA_OR_ZERO,B		is OP=31 & vrD & RA_OR_ZERO & B & XOP_1_10=6 & Rc=0
+{
+	vrD = __lvsl(RA_OR_ZERO,B);
 }
 
 :lvsr vrD,RA_OR_ZERO,B		is OP=31 & vrD & RA_OR_ZERO & B & XOP_1_10=38 & Rc=0
 {
-	vrD = loadVectorForShiftRight(RA_OR_ZERO,B);
+	vrD = __lvsr(RA_OR_ZERO,B);
 }
 
 :lvx vrD,RA_OR_ZERO,B		is OP=31 & vrD & RA_OR_ZERO & B & XOP_1_10=103 & Rc=0
 {   
-#	vrD = loadVectorIndexed(A,B);
+#	vrD = __lvx(A,B);
 	build RA_OR_ZERO;
 	tmp:$(REGISTER_SIZE) = (RA_OR_ZERO + B) & 0xfffffffffffffff0;
 	vrD = *[ram]:16 tmp; 
 }
 
-:lvxl vrD,A,B		is OP=31 & vrD & A & B & XOP_1_10=359 & Rc=0
-{   # TODO definition
-	vrD = loadVectorIndexedLRU(A,B);
+:lvxl vrD,RA_OR_ZERO,B		is OP=31 & vrD & RA_OR_ZERO & B & XOP_1_10=359 & Rc=0
+{
+	tmp:$(REGISTER_SIZE) = (RA_OR_ZERO + B) & 0xfffffffffffffff0;
+	vrD = *[ram]:16 tmp;
 }
 
 :mfvscr vrD			is OP=4 & vrD & vrAR=0 & vrBR=0 & XOP_1_10=770 & Rc=0
 {   # TODO definition
-	vrD = moveFromVectorStatusAndControlRegister();
+	vrD = __mfvscr();
 }
 
 :mtvscr vrB			is OP=4 & vrDR=0 & vrAR=0 & vrB & XOP_1_10=802 & Rc=0
 {   # TODO definition
-	moveToVectorStatusAndControlRegister(vrB);
+	__mtvscr(vrB);
 }
 
 :stvebx vrS,RA_OR_ZERO,B		is OP=31 & vrS & RA_OR_ZERO & B & XOP_1_10=135 & Rc=0
-{   # TODO definition
-	EA:$(REGISTER_SIZE) = RA_OR_ZERO + B;
-	*[ram]:1 EA = storeVectorElementByteIndexed(vrS,RA_OR_ZERO,B);
+{
+	EA:$(REGISTER_SIZE) = (RA_OR_ZERO + B);
+	eb:1 = EA[0,4];
+@if ENDIAN == "big"
+	eb = 0xF - eb;
+@endif
+	tmp:16 = vrS >> (eb * 8);
+	*[ram]:1 EA = tmp:1;
 }
 
 :stvehx vrS,RA_OR_ZERO,B		is OP=31 & vrS & RA_OR_ZERO & B & XOP_1_10=167 & Rc=0
-{   # TODO definition
-	EA:$(REGISTER_SIZE) = RA_OR_ZERO + B;
-	*[ram]:2 EA = storeVectorElementHalfWordIndexed(vrS,RA_OR_ZERO,B);
+{
+	EA:$(REGISTER_SIZE) = (RA_OR_ZERO + B) & ~1;
+	eb:1 = EA[0,4];
+@if ENDIAN == "big"
+	eb = 0xE - eb;
+@endif
+	tmp:16 = vrS >> (eb * 8);
+	*[ram]:2 EA = tmp:2;
 }
 
 :stvewx vrS,RA_OR_ZERO,B		is OP=31 & vrS & RA_OR_ZERO & B & XOP_1_10=199 & Rc=0
-{   # TODO definition
-	EA:$(REGISTER_SIZE) = (RA_OR_ZERO + B) & 0xfffffffffffffffc;
-	*[ram]:4 EA = storeVectorElementWordIndexed(vrS,RA_OR_ZERO,B);
+{
+	EA:$(REGISTER_SIZE) = (RA_OR_ZERO + B) & ~3;
+	eb:1 = EA[0,4];
+@if ENDIAN == "big"
+	eb = 0xC - eb;
+@endif
+	tmp:16 = vrS >> (eb * 8);
+	*[ram]:4 EA = tmp:4;
 }
 
 :stvx vrS,RA_OR_ZERO,B		is OP=31 & vrS & B & RA_OR_ZERO & XOP_1_10=231 & Rc=0
@@ -283,476 +308,477 @@ define pcodeop vectorUnpackLowSignedHalfWord;
 
 :vaddcuw vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=384
 {  # TODO definition
-	vrD = vectorAddCarryoutUnsignedWord(vrA,vrB);
+	vrD = __vaddcuw(vrA,vrB);
 }
 
 :vaddfp vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=10
 {   # TODO definition
-	vrD = vectorAddFloatingPoint(vrA,vrB);
+	vrD = __vaddfp(vrA,vrB);
 }
 
 :vaddsbs vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=768
 {   # TODO definition
-	vrD = vectorAddSignedByteSaturate(vrA,vrB);
+	vrD = __vaddsbs(vrA,vrB);
 }
 
 :vaddshs vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=832
 {   # TODO definition
-	vrD = vectorAddSignedHalfWordSaturate(vrA,vrB);
+	vrD = __vaddshs(vrA,vrB);
 }
 
 :vaddsws vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=896
 {   # TODO definition
-	vrD = vectorAddSignedWordSaturate(vrA,vrB);
+	vrD = __vaddsws(vrA,vrB);
 }
 
 :vaddubm vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=0
 {
-	vrD = vectorAddUnsignedByteModulo(vrA,vrB);
+	vrD = __vaddubm(vrA,vrB);
 }
 
 :vaddubs vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=512
 {   # TODO definition
-	vrD = vectorAddUnsignedByteSaturate(vrA,vrB);
+	vrD = __vaddubs(vrA,vrB);
 }
 
 :vadduhm vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=64
 {
-	vrD = vectorAddUnsignedHalfWordModulo(vrA,vrB);
+	vrD = __vadduhm(vrA,vrB);
 }
 
 :vadduhs vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=576
 {   # TODO definition
-	vrD = vectorAddUnsignedHalfWordSaturate(vrA,vrB);
+	vrD = __vadduhs(vrA,vrB);
 }
 
 :vadduwm vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=128
 {
-	vrD = vectorAddUnsignedWordModulo(vrA,vrB);
+	vrD = __vadduwm(vrA,vrB);
 }
 
 :vadduws vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & XOP_0_10=640
 {   # TODO definition
-	vrD = vectorAddUnsignedWordSaturate(vrA,vrB);
+	vrD = __vadduws(vrA,vrB);
 }
 
 :vand vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1028
 {   # TODO definition
-	vrD = vectorLogicalAnd(vrA,vrB);
+	vrD = __vand(vrA,vrB);
 }
 
 :vandc vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1092
 {   # TODO definition
-	vrD = vectorLogicalAndWithComplement(vrA,vrB);
+	vrD = __vandc(vrA,vrB);
 }
 
 :vavgsb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1282
 {   # TODO definition
-	vrD = vectorAverageSignedByte(vrA,vrB);
+	vrD = __vavgsb(vrA,vrB);
 }
 
 :vavgsh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1346
 {   # TODO definition
-	vrD = vectorAverageSignedHalfWord(vrA,vrB);
+	vrD = __vavgsh(vrA,vrB);
 }
 
 :vavgsw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1410
 {   # TODO definition
-	vrD = vectorAverageSignedWord(vrA,vrB);
+	vrD = __vavgsw(vrA,vrB);
 }
 
 :vavgub vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1026
 {   # TODO definition
-	vrD = vectorAverageUnsignedByte(vrA,vrB);
+	vrD = __vavgub(vrA,vrB);
 }
 
 :vavguh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1090
 {   # TODO definition
-	vrD = vectorAverageUnsignedHalfWord(vrA,vrB);
+	vrD = __vavguh(vrA,vrB);
 }
 
 :vavguw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1154
 {   # TODO definition
-	vrD = vectorAverageUnsignedWord(vrA,vrB);
+	vrD = __vavguw(vrA,vrB);
 }
 
 :vcfsx vrD,vrB,A_BITS	is OP=4 & vrD & A_BITS & vrB & XOP_0_10=842
 {   # TODO definition
-	vrD = vectorConvertFromSignedFixedPointWord(vrB,A_BITS:1);
+	vrD = __vcfsx(vrB,A_BITS:1);
 }
 
 :vcfux vrD,vrB,A_BITS	is OP=4 & vrD & A_BITS & vrB & XOP_0_10=778
 {   # TODO definition
-	vrD = vectorConvertFromUnsignedFixedPointWord(vrB,A_BITS:1);
+	vrD = __vcfux(vrB,A_BITS:1);
 }
 
 :vcmpbfp vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=966
 {   # TODO definition
-	vrD = vectorCompareBoundsFloatingPoint(vrA,vrB);
+	vrD = __vcmpbfp(vrA,vrB);
 }
 
 :vcmpbfp. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=966
 {   # TODO definition
-	# TODO change CR6
-	vrD = vectorCompareBoundsFloatingPoint(vrA,vrB);
+	vrD = __vcmpbfp(vrA,vrB);
+	cr6 = zext(vrD == 0) << 1;
 }
 
 :vcmpeqfp vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=198
 {   # TODO definition
     # TODO change CR6
-	vrD = vectorCompareEqualToFloatingPoint(vrA,vrB);
+	vrD = __vcmpeqfp(vrA,vrB);
 }
 
 :vcmpeqfp. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=198
 {   # TODO definition
-	vrD = vectorCompareEqualToFloatingPoint(vrA,vrB);
+	vrD = __vcmpeqfp(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpequb vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=6
 {   # TODO definition
 	# TODO change CR6
-	vrD = vectorCompareEqualToUnsignedByte(vrA,vrB);
+	vrD = __vcmpequb(vrA,vrB);
 }
 
 :vcmpequb. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=6
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareEqualToUnsignedByte(vrA,vrB);
+	vrD = __vcmpequb(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpequh vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=70
 {   # TODO definition 
 	# TODO change CR6
-	vrD = vectorCompareEqualToUnsignedHalfWord(vrA,vrB);
+	vrD = __vcmpequh(vrA,vrB);
 }
 
 :vcmpequh. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=70
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareEqualToUnsignedHalfWord(vrA,vrB);
+	vrD = __vcmpequh(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpequw vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=134
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareEqualToUnsignedWord(vrA,vrB);
+	vrD = __vcmpequw(vrA,vrB);
 }
 
 :vcmpequw. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=134
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareEqualToUnsignedWord(vrA,vrB);
+	vrD = __vcmpequw(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgefp vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=454
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanOrEqualToFloatingPoint(vrA,vrB);
+	vrD = __vcmpgefp(vrA,vrB);
 }
 
 :vcmpgefp. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=454
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanOrEqualToFloatingPoint(vrA,vrB);
+	vrD = __vcmpgefp(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtfp vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=710
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanFloatingPoint(vrA,vrB);
+	vrD = __vcmpgtfp(vrA,vrB);
 }
 
 :vcmpgtfp. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=710
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanFloatingPoint(vrA,vrB);
+	vrD = __vcmpgtfp(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtsb vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=774
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanSignedByte(vrA,vrB);
+	vrD = __vcmpgtsb(vrA,vrB);
 }
 
 :vcmpgtsb. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=774
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanSignedByte(vrA,vrB);
+	vrD = __vcmpgtsb(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtsh vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=838
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanConditionRegisterSignedHalfWord(vrA,vrB);
+	vrD = __vcmpgtsh(vrA,vrB);
 }
 
 :vcmpgtsh. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=838
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanConditionRegisterSignedHalfWord(vrA,vrB);
+	vrD = __vcmpgtsh(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtsw vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=902
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanSignedWord(vrA,vrB);
+	vrD = __vcmpgtsw(vrA,vrB);
 }
 
 :vcmpgtsw. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=902
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanSignedWord(vrA,vrB);
+	vrD = __vcmpgtsw(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtub vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=518
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanUnsignedByte(vrA,vrB);
+	vrD = __vcmpgtub(vrA,vrB);
 }
 
 :vcmpgtub. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=518
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanUnsignedByte(vrA,vrB);
+	vrD = __vcmpgtub(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtuh vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=582
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanUnsignedHalfWord(vrA,vrB);
+	vrD = __vcmpgtuh(vrA,vrB);
 }
 
 :vcmpgtuh. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=582
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanUnsignedHalfWord(vrA,vrB);
+	vrD = __vcmpgtuh(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtuw vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=0 & XOP_0_9=646
 {	# TODO definition
 	# TODO change CR6
-	vrD = vectorCompareGreaterThanUnsignedWord(vrA,vrB);
+	vrD = __vcmpgtuw(vrA,vrB);
 }
 
 :vcmpgtuw. vrD,vrA,vrB	is OP=4 & vrD & vrA & vrB & BIT_10=1 & XOP_0_9=646
 {	# TODO definition
-	# TODO change CR6
-	vrD = vectorCompareGreaterThanUnsignedWord(vrA,vrB);
+	vrD = __vcmpgtuw(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vctsxs vrD,vrB,A_BITS	is OP=4 & vrD & A_BITS & vrB & XOP_0_10=970
 {	# TODO definition
-	vrD = vectorConvertToSignedFixedPointWordSaturate(vrB,A_BITS:1);
+	vrD = __vctsxs(vrB,A_BITS:1);
 }
 
 :vctuxs vrD,vrB,A_BITS	is OP=4 & vrD & A_BITS & vrB & XOP_0_10=906
 {	# TODO definition
-	vrD = vectorConvertToUnsignedFixedPointWordSaturate(vrB,A_BITS:1);
+	vrD = __vctuxs(vrB,A_BITS:1);
 }
 
 :vexptefp vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=394
 {	# TODO definition
-	vrD = vector2RaisedToTheExponentEstimateFloatingPoint(vrB);
+	vrD = __vexptefp(vrB);
 }
 
 :vlogefp vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=458
 {	# TODO definition
-	vrD = vectorLog2EstimateFloatingPoint(vrB);
+	vrD = __vlogefp(vrB);
 }
 
 :vmaddfp vrD,vrA,vrC,vrB	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=46
 {	# TODO definition
-	vrD = vectorMultiplyAddFloatingPoint(vrA,vrC,vrB);
+	vrD = __vmaddfp(vrA,vrC,vrB);
 }
 
 :vmaxfp vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1034
 {	# TODO definition
-	vrD = vectorMaximumFloatingPoint(vrA,vrB);
+	vrD = __vmaxfp(vrA,vrB);
 }
 
 :vmaxsb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=258
 {	# TODO definition
-	vrD = vectorMaximumSignedByte(vrA,vrB);
+	vrD = __vmaxsb(vrA,vrB);
 }
 
 :vmaxsh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=322
 {	# TODO definition
-	vrD = vectorMaximumSignedHalfWord(vrA,vrB);
+	vrD = __vmaxsh(vrA,vrB);
 }
 
 :vmaxsw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=386
 {	# TODO definition
-	vrD = vectorMaximumSignedWord(vrA,vrB);
+	vrD = __vmaxsw(vrA,vrB);
 }
 
 :vmaxub vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=2
 {	# TODO definition
-	vrD = vectorMaximumUnsignedByte(vrA,vrB);
+	vrD = __vmaxub(vrA,vrB);
 }
 
 :vmaxuh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=66
 {	# TODO definition
-	vrD = vectorMaximumUnsignedHalfWord(vrA,vrB);
+	vrD = __vmaxuh(vrA,vrB);
 }
 
 :vmaxuw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=130
 {	# TODO definition
-	vrD = vectorMaximumUnsignedWord(vrA,vrB);
+	vrD = __vmaxuw(vrA,vrB);
 }
 
 :vmhaddshs vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=32
 {	# TODO definition
-	vrD = vectorMultiplyHighAndAddSignedHalfWordSaturate(vrA,vrB,vrC);
+	vrD = __vmhaddshs(vrA,vrB,vrC);
 }
 
 :vmhraddshs vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=33
 {	# TODO definition
-	vrD = vectorMultiplyHighRoundAndAddSignedHalfWordSaturate(vrA,vrB,vrC);
+	vrD = __vmhraddshs(vrA,vrB,vrC);
 }
 
 :vminfp vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1098
 {	# TODO definition
-	vrD = vectorMinimumFloatingPoint(vrA,vrB);
+	vrD = __vminfp(vrA,vrB);
 }
 
 :vminsb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=770
 {	# TODO definition
-	vrD = vectorMinimumSignedByte(vrA,vrB);
+	vrD = __vminsb(vrA,vrB);
 }
 
 :vminsh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=834
 {	# TODO definition
-	vrD = vectorMinimumSignedHalfWord(vrA,vrB);
+	vrD = __vminsh(vrA,vrB);
 }
 
 :vminsw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=898
 {	# TODO definition
-	vrD = vectorMinimumSignedWord(vrA,vrB);
+	vrD = __vminsw(vrA,vrB);
 }
 
 :vminub vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=514
 {	# TODO definition
-	vrD = vectorMinimumUnsignedByte(vrA,vrB);
+	vrD = __vminub(vrA,vrB);
 }
 
 :vminuh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=578
 {	# TODO definition
-	vrD = vectorMinimumUnsignedHalfWord(vrA,vrB);
+	vrD = __vminuh(vrA,vrB);
 }
 
 :vminuw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=642
 {	# TODO definition
-	vrD = vectorMinimumUnsignedWord(vrA,vrB);
+	vrD = __vminuw(vrA,vrB);
 }
 
 :vmladduhm vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=34
 {	# TODO definition
-	vrD = vectorMultiplyLowAndAddUnsignedHalfWordModulo(vrA,vrB,vrC);
+	vrD = __vmladduhm(vrA,vrB,vrC);
 }
 
 :vmrghb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=12
 {	# TODO definition
-	vrD = vectorMergeHighByte(vrA,vrB);
+	vrD = __vmrghb(vrA,vrB);
 }
 
 :vmrghh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=76
 {	# TODO definition
-	vrD = vectorMergeHighHalfWord(vrA,vrB);
+	vrD = __vmrghh(vrA,vrB);
 }
 
 :vmrghw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=140
 {	# TODO definition
-	vrD = vectorMergeHighWord(vrA,vrB);
+	vrD = __vmrghw(vrA,vrB);
 }
 
 :vmrglb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=268
 {	# TODO definition
-	vrD = vectorMergeLowByte(vrA,vrB);
+	vrD = __vmrglb(vrA,vrB);
 }
 
 :vmrglh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=332
 {	# TODO definition
-	vrD = vectorMergeLowHalfWord(vrA,vrB);
+	vrD = __vmrglh(vrA,vrB);
 }
 
 :vmrglw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=396
 {	# TODO definition
-	vrD = vectorMergeLowWord(vrA,vrB);
+	vrD = __vmrglw(vrA,vrB);
 }
 
 :vmsummbm vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=37
 {	# TODO definition
-	vrD = vectorMultiplySumMixedSignByteModulo(vrA,vrB,vrC);
+	vrD = __vmsummbm(vrA,vrB,vrC);
 }
 
 :vmsumshm vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=40
 {	# TODO definition
-	vrD = vectorMultiplySumSignedHalfWordModulo(vrA,vrB,vrC);
+	vrD = __vmsumshm(vrA,vrB,vrC);
 }
 
 :vmsumshs vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=41
 {	# TODO definition
-	vrD = vectorMultiplySumSignedHalfWordSaturate(vrA,vrB,vrC);
+	vrD = __vmsumshs(vrA,vrB,vrC);
 }
 
 :vmsumubm vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=36
 {	# TODO definition
-	vrD = vectorMultiplySumUnsignedByteModulo(vrA,vrB,vrC);
+	vrD = __vmsumubm(vrA,vrB,vrC);
 }
 
 :vmsumuhm vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=38
 {	# TODO definition
-	vrD = vectorMultiplySumUnsignedHalfWordModulo(vrA,vrB,vrC);
+	vrD = __vmsumuhm(vrA,vrB,vrC);
 }
 
 :vmsumuhs vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=39
 {	# TODO definition
-	vrD = vectorMultiplySumUnsignedHalfWordSaturate(vrA,vrB,vrC);
+	vrD = __vmsumuhs(vrA,vrB,vrC);
 }
 
 :vmulesb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=776
 {	# TODO definition
-	vrD = vectorMultiplyEvenSignedByte(vrA,vrB);
+	vrD = __vmulesb(vrA,vrB);
 }
 
 :vmulesh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=840
 {	# TODO definition
-	vrD = vectorMultiplyEvenSignedHalfWord(vrA,vrB);
+	vrD = __vmulesh(vrA,vrB);
 }
 
 :vmuleub vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=520
 {	# TODO definition
-	vrD = vectorMultiplyEvenUnsignedByte(vrA,vrB);
+	vrD = __vmuleub(vrA,vrB);
 }
 
 :vmuleuh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=584
 {	# TODO definition
-	vrD = vectorMultiplyEvenUnsignedHalfWord(vrA,vrB);
+	vrD = __vmuleuh(vrA,vrB);
 }
 
 :vmulosb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=264
 {	# TODO definition
-	vrD = vectorMultiplyOddSignedByte(vrA,vrB);	
+	vrD = __vmulosb(vrA,vrB);	
 }
 
 :vmulosh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=328
 {	# TODO definition
-	vrD = vectorMultiplyOddSignedHalfWord(vrA,vrB);
+	vrD = __vmulosh(vrA,vrB);
 }
 
 :vmuloub vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=8
 {	# TODO definition
-	vrD = vectorMultiplyOddUnsignedByte(vrA,vrB);
+	vrD = __vmuloub(vrA,vrB);
 }
 
 :vmulouh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=72
 {	# TODO definition
-	vrD = vectorMultiplyOddUnsignedHalfWord(vrA,vrB);
+	vrD = __vmulouh(vrA,vrB);
 }
 
 :vnmsubfp vrD,vrA,vrC,vrB	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=47
 {	# TODO definition
-	vrD = vectorNegativeMultiplySubtractFloatingPoint(vrA,vrC,vrB);
+	vrD = __vnmsubfp(vrA,vrC,vrB);
 }
 
 :vnor vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1284
@@ -780,157 +806,157 @@ define pcodeop vectorUnpackLowSignedHalfWord;
 #	cnt = cnt - 1;
 #	goto <top>;
 #	<end>
-	vrD = vectorPermute(vrA,vrB,vrC);
+	vrD = __vperm(vrA,vrB,vrC);
 }
 
 :vpkpx vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=782
 {	# TODO definition
-	vrD = vectorPackPixel32(vrA,vrB);
+	vrD = __vpkpx(vrA,vrB);
 }
 
 :vpkshss vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=398
 {	# TODO definition
-	vrD = vectorPackSignedHalfWordSignedSaturate(vrA,vrB);
+	vrD = __vpkshss(vrA,vrB);
 }
 
 :vpkshus vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=270
 {	# TODO definition
-	vrD = vectorPackSignedHalfWordUnsignedSaturate(vrA,vrB);
+	vrD = __vpkshus(vrA,vrB);
 }
 
 :vpkswss vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=462
 {	# TODO definition
-	vrD = vectorPackSignedWordSignedSaturate(vrA,vrB);
+	vrD = __vpkswss(vrA,vrB);
 }
 
 :vpkswus vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=334
 {	# TODO definition
-	vrD = vectorPackSignedWordUnsignedSaturate(vrA,vrB);
+	vrD = __vpkswus(vrA,vrB);
 }
 
 :vpkuhum vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=14
 {	# TODO definition
-	vrD = vectorPackUnsignedHalfWordUnsignedModulo(vrA,vrB);
+	vrD = __vpkuhum(vrA,vrB);
 }
 
 :vpkuhus vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=142
 {	# TODO definitionXTF = 
-	vrD = vectorPackUnsignedHalfWordUnsignedSaturate(vrA,vrB);
+	vrD = __vpkuhus(vrA,vrB);
 }
 
 :vpkuwum vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=78
 {	# TODO definition
-	vrD = vectorPackUnsignedWordUnsignedModulo(vrA,vrB);
+	vrD = __vpkuwum(vrA,vrB);
 }
 
 :vpkuwus vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=206
 {	# TODO definition
-	vrD = vectorPackUnsignedWordUnsignedSaturate(vrA,vrB);
+	vrD = __vpkuwus(vrA,vrB);
 }
 
 :vrefp vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=266
 {	# TODO definition
-	vrD = vectorReciprocalEstimateFloatingPoint(vrB);
+	vrD = __vrefp(vrB);
 }
 
 :vrfim vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=714
 {	# TODO definition
-	vrD = vectorRoundToFloatingPointIntegerTowardMinusInfinity(vrB);
+	vrD = __vrfim(vrB);
 }
 
 :vrfin vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=522
 {	# TODO definition
-	vrD = vectorRoundToFloatingPointIntegerNearest(vrB);
+	vrD = __vrfin(vrB);
 }
 
 :vrfip vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=650
 {	# TODO definition
-	vrD = vectorRoundToFloatingPointIntegerTowardPluInfinity(vrB);
+	vrD = __vrfip(vrB);
 }
 
 :vrfiz vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=586
 {	# TODO definition
-	vrD = vectorRoundToFloatingPointIntegerTowardZero(vrB);
+	vrD = __vrfiz(vrB);
 }
 
 :vrlb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=4
 {	# TODO definition
-	vrD = vectorRotateLeftIntegerByte(vrA,vrB);
+	vrD = __vrlb(vrA,vrB);
 }
 
 :vrlh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=68
 {	# TODO definition
-	vrD = vectorRotateLeftIntegerHalfWord(vrA,vrB);
+	vrD = __vrlh(vrA,vrB);
 }
 
 :vrlw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=132
 {	# TODO definition
-	vrD = vectorRotateLeftIntegerWord(vrA,vrB);
+	vrD = __vrlw(vrA,vrB);
 }
 
 :vrsqrtefp vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=330
 {	# TODO definition
-	vrD = vectorReciprocalSquareRootEstimateFloatingPoint(vrB);
+	vrD = __vrsqrtefp(vrB);
 }
 
 :vsel vrD,vrA,vrB,vrC	is OP=4 & vrD & vrA & vrB & vrC & XOP_0_5=42
 {	# TODO definition
-	vrD = vectorConditionalSelect(vrA,vrB,vrC);
+	vrD = __vsel(vrA,vrB,vrC);
 }
 
 :vsl vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=452
 {	# TODO definition
-	vrD = vectorShiftLeft(vrA,vrB);
+	vrD = __vsl(vrA,vrB);
 }
 
 :vslb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=260
 {	# TODO definition
-	vrD = vectorShiftLeftIntegerByte(vrA,vrB);
+	vrD = __vslb(vrA,vrB);
 }
 
 :vsldoi vrD,vrA,vrB,SHB		is OP=4 & vrD & vrA & vrB & BIT_10=0 & SHB & XOP_0_5=44
 {
-	vrD = vectorShiftLeftDoubleByOctetImmediate(vrA,vrB,SHB:1);
+	vrD = __vsldoi(vrA,vrB,SHB:1);
 }
 
 :vslh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=324
 {	# TODO definition
-	vrD = vectorShiftLeftIntegerHalfWord(vrA,vrB);
+	vrD = __vslh(vrA,vrB);
 }
 
 :vslo vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1036
 {	# TODO definition
-	vrD = vectorShiftLeftByOctet(vrA,vrB);
+	vrD = __vslo(vrA,vrB);
 }
 
 :vslw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=388
 {	# TODO definition
-	vrD = vectorShiftLeftIntegerWord(vrA,vrB);
+	vrD = __vslw(vrA,vrB);
 }
 
 :vspltb vrD,vrB,UIMB	is OP=4 & vrD & BITS_20_20=0 & UIMB & vrB & XOP_0_10=524
 {
-	vrD = vectorSplatByte(vrB,UIMB:1);
+	vrD = __vspltb(vrB,UIMB:1);
 }
 
 :vsplth vrD,vrB,UIMH	is OP=4 & vrD & BITS_19_20=0 & UIMH & vrB & XOP_0_10=588
 {	# TODO definition
-	vrD = vectorSplatHalfWord(vrB,UIMH:1);
+	vrD = __vsplth(vrB,UIMH:1);
 }
 
 :vspltisb vrD,A_BITSS	is OP=4 & vrD & A_BITSS & B_BITS=0 & XOP_0_10=780
 {	# TODO definition
-	vrD = vectorSplatImmediateSignedByte(A_BITSS:1);
+	vrD = __vspltisb(A_BITSS:1);
 }
 
 :vspltish vrD,A_BITSS	is OP=4 & vrD & A_BITSS & B_BITS=0 & XOP_0_10=844
 {	# TODO definition
-	vrD = vectorSplatImmediateSignedHalfWord(A_BITSS:1);
+	vrD = __vspltish(A_BITSS:1);
 }
 
 :vspltisw vrD,A_BITSS	is OP=4 & vrD & A_BITSS & B_BITS=0 & XOP_0_10=908
 {
-	vrD = vectorSplatImmediateSignedWord(A_BITSS:1);
+	vrD = __vspltisw(A_BITSS:1);
 }
 
 # A better way to do this would be to make a subtable to interpret
@@ -938,157 +964,157 @@ define pcodeop vectorUnpackLowSignedHalfWord;
 # to that value.
 :vspltw vrD,vrB,UIMW	is OP=4 & vrD & vrB & BITS_18_20=0 & UIMW & XOP_0_10=652
 {
-	vrD = vectorSplatWord(vrB,UIMW:1);
+	vrD = __vspltw(vrB,UIMW:1);
 }
 
 :vsr vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=708
 {	# TODO definition
-	vrD = vectorShiftRight(vrA,vrB);
+	vrD = __vsr(vrA,vrB);
 }
 
 :vsrab vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=772
 {	# TODO definition
-	vrD = vectorShiftRightAlgebraicByte(vrA,vrB);
+	vrD = __vsrab(vrA,vrB);
 }
 
 :vsrah vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=836
 {	# TODO definition
-	vrD = vectorShiftRightAlgebraicHalfWord(vrA,vrB);
+	vrD = __vsrah(vrA,vrB);
 }
 
 :vsraw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=900
 {	# TODO definition
-	vrD = vectorShiftRightAlgebraicWord(vrA,vrB);
+	vrD = __vsraw(vrA,vrB);
 }
 
 :vsrb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=516
 {	# TODO definition
-	vrD = vectorShiftRightByte(vrA,vrB);
+	vrD = __vsrb(vrA,vrB);
 }
 
 :vsrh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=580
 {	# TODO definition
-	vrD = vectorShiftRightHalfWord(vrA,vrB);
+	vrD = __vsrh(vrA,vrB);
 }
 
 :vsro vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1100
 {	# TODO definition
-	vrD = vectorShiftRightByOctet(vrA,vrB);
+	vrD = __vsro(vrA,vrB);
 }
 
 :vsrw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=644
 {	# TODO definition
-	vrD = vectorShiftRightWord(vrA,vrB);
+	vrD = __vsrw(vrA,vrB);
 }
 
 :vsubcuw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1408
 {	# TODO definition
-	vrD = vectorSubtractCarryoutUnsignedWord(vrA,vrB);
+	vrD = __vsubcuw(vrA,vrB);
 }
 
 :vsubfp vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=74
 {	# TODO definition
-	vrD = vectorSubtractFloatingPoint(vrA,vrB);
+	vrD = __vsubfp(vrA,vrB);
 }
 
 :vsubsbs vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1792
 {	# TODO definition
-	vrD = vectorSubtractSignedByteSaturate(vrA,vrB);
+	vrD = __vsubsbs(vrA,vrB);
 }
 
 :vsubshs vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1856
 {	# TODO definition
-	vrD = vectorSubtractSignedHalfWordSaturate(vrA,vrB);
+	vrD = __vsubshs(vrA,vrB);
 }
 
 :vsubsws vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1920
 {	# TODO definition
-	vrD = vectorSubtractSignedWordSaturate(vrA,vrB);
+	vrD = __vsubsws(vrA,vrB);
 }
 
 :vsububm vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1024
 {	# TODO definition
-	vrD = vectorSubtractUnsignedByteModulo(vrA,vrB);
+	vrD = __vsububm(vrA,vrB);
 }
 
 :vsububs vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1536
 {	# TODO definition
-	vrD = vectorSubtractUnsignedByteSaturate(vrA,vrB);
+	vrD = __vsububs(vrA,vrB);
 }
 
 :vsubuhm vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1088
 {
-	vrD = vectorSubtractUnsignedHalfWordModulo(vrA,vrB);
+	vrD = __vsubuhm(vrA,vrB);
 }
 
 :vsubuhs vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1600
 {	# TODO definition
-	vrD = vectorSubtractUnsignedHalfWordSaturate(vrA,vrB);
+	vrD = __vsubuhs(vrA,vrB);
 }
 
 :vsubuwm vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1152
 {	# TODO definition
-	vrD = vectorSubtractUnsignedWordModulo(vrA,vrB);
+	vrD = __vsubuwm(vrA,vrB);
 }
 
 :vsubuws vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1664
 {	# TODO definition
-	vrD = vectorSubtractUnsignedWordSaturate(vrA,vrB);
+	vrD = __vsubuws(vrA,vrB);
 }
 
 :vsumsws vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1928
 {	# TODO definition
-	vrD = vectorSumAcrossSignedWordSaturate(vrA,vrB);
+	vrD = __vsumsws(vrA,vrB);
 }
 
 :vsum2sws vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1672
 {	# TODO definition
-	vrD = vectorSumAcrossPartialSignedWordSaturate(vrA,vrB);
+	vrD = __vsum2sws(vrA,vrB);
 }
 
 :vsum4sbs vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1800
 {	# TODO definition
-	vrD = vectorSumAcrossPartialSignedByteSaturate(vrA,vrB);	
+	vrD = __vsum4sbs(vrA,vrB);	
 }
 
 :vsum4shs vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1608
 {	# TODO definition
-	vrD = vectorSumAcrossPartialSignedHalfWordSaturate(vrA,vrB);	
+	vrD = __vsum4shs(vrA,vrB);	
 }
 
 :vsum4ubs vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1544
 {	# TODO definition
-	vrD = vectorSumAcrossPartialUnsignedByteSaturate(vrA,vrB);	
+	vrD = __vsum4ubs(vrA,vrB);	
 }
 
 :vupkhpx vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=846
 {	# TODO definition
-	vrD = vectorUnpackHighPixel16(vrB);
+	vrD = __vupkhpx(vrB);
 }
 
 :vupkhsb vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=526
 {	# TODO definition
-	vrD = vectorUnpackHighSignedByte(vrB);
+	vrD = __vupkhsb(vrB);
 }
 
 :vupkhsh vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=590
 {	# TODO definition
-	vrD = vectorUnpackHighSignedHalfWord(vrB);
+	vrD = __vupkhsh(vrB);
 }
 
 :vupklpx vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=974
 {	# TODO definition
-	vrD = vectorUnpackLowPixel16(vrB);
+	vrD = __vupklpx(vrB);
 }
 
 :vupklsb vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=654
 {	# TODO definition
-	vrD = vectorUnpackLowSignedByte(vrB);
+	vrD = __vupklsb(vrB);
 }
 
 :vupklsh vrD,vrB		is OP=4 & vrD & A_BITS=0 & vrB & XOP_0_10=718
 {	# TODO definition
-	vrD = vectorUnpackLowSignedHalfWord(vrB);
+	vrD = __vupklsh(vrB);
 }
 
 :vxor vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & XOP_0_10=1220
@@ -1298,6 +1324,7 @@ define pcodeop altv300_71;
 
 :vcmpequd. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=199 {
 	vrD = altv207_14(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtsd vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=0 & XOP_0_9=967 {
@@ -1306,6 +1333,7 @@ define pcodeop altv300_71;
 
 :vcmpgtsd. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=967 {
 	vrD = altv207_16(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpgtud vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=0 & XOP_0_9=711 {
@@ -1314,6 +1342,7 @@ define pcodeop altv300_71;
 
 :vcmpgtud. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=711 {
 	vrD = altv207_18(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :veqv vrD,vrA,vrB			is OP=4 & vrD & vrA & vrB & XOP_0_10=1668 {
@@ -1573,6 +1602,7 @@ define pcodeop altv300_71;
 
 :vcmpneb. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=7 {
 	vrD = altv300_21(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpneh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=0 & XOP_0_9=71 {
@@ -1581,6 +1611,7 @@ define pcodeop altv300_71;
 
 :vcmpneh. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=71 {
 	vrD = altv300_23(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpnew vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=0 & XOP_0_9=135 {
@@ -1589,6 +1620,7 @@ define pcodeop altv300_71;
 
 :vcmpnew. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=135 {
 	vrD = altv300_25(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpnezb vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=0 & XOP_0_9=263 {
@@ -1597,6 +1629,7 @@ define pcodeop altv300_71;
 
 :vcmpnezb. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=263 {
 	vrD = altv300_27(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpnezh vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=0 & XOP_0_9=327 {
@@ -1605,6 +1638,7 @@ define pcodeop altv300_71;
 
 :vcmpnezh. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=327 {
 	vrD = altv300_29(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vcmpnezw vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=0 & XOP_0_9=391 {
@@ -1613,6 +1647,7 @@ define pcodeop altv300_71;
 
 :vcmpnezw. vrD,vrA,vrB		is OP=4 & vrD & vrA & vrB & Rc2=1 & XOP_0_9=391 {
 	vrD = altv300_31(vrA,vrB);
+	vectorCompareCR6(vrD);
 }
 
 :vctzb vrD,vrB				is OP=4 & vrD & vrB & BITS_16_20=28 & XOP_0_10=1538 {

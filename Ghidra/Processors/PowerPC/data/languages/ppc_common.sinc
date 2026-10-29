@@ -1561,7 +1561,7 @@ define pcodeop WriteExternalEnableImmediate;
 
 # This is really used in the altivec version, but since it's a registered pcode op
 # and due to the way things get @included, this needs to be here
-define pcodeop vectorPermute;
+define pcodeop __vperm;
 
 
 ################################################################

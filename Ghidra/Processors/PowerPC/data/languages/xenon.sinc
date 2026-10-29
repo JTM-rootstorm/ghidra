@@ -95,32 +95,29 @@ vC128: xCn	is xCn & xC		{ export xC; }
 # VPERMWI128's 8-bit word selector: bits 11-15, then 23-25 above them.
 PermImm: imm	is xUimm & xC [ imm = xUimm | (xC << 5); ]	{ export *[const]:1 imm; }
 
-# The all-true (bit 3) and all-false (bit 1) summary of a vector compare.
-macro cmpCR6(v) {
-	cr6 = (zext(~v == 0) << 3) | (zext(v == 0) << 1);
-}
-
 # Primary opcode 4: VSLDOI128 (bit 27) and the loads and stores (bits 30-31
 # set, the extended opcode in bits 21-27).
 
 :vsldoi128 vD128,vA128,vB128,xOp	is xOP=4 & xBit27=1 & vD128 & vA128 & vB128 & xOp
 {
-	vD128 = vectorShiftLeftDoubleByOctetImmediate(vA128,vB128,xOp:1);
+	vD128 = __vsldoi(vA128,vB128,xOp:1);
 }
 
 :lvsl128 vD128,xRA0,xRB	is xOP=4 & xMem=0 & xLow2=3 & vD128 & xRA0 & xRB
 {
-	vD128 = loadVectorForShiftLeft(xRA0,xRB);
+	vD128 = __lvsl(xRA0,xRB);
 }
 
 :lvsr128 vD128,xRA0,xRB	is xOP=4 & xMem=4 & xLow2=3 & vD128 & xRA0 & xRB
 {
-	vD128 = loadVectorForShiftRight(xRA0,xRB);
+	vD128 = __lvsr(xRA0,xRB);
 }
 
 :lvewx128 vD128,xRA0,xRB	is xOP=4 & xMem=8 & xLow2=3 & vD128 & xRA0 & xRB
 {
-	vD128 = loadVectorElementWordIndexed(xRA0,xRB);
+	EA:$(REGISTER_SIZE) = (xRA0 + xRB) & ~3;
+	eb:1 = 0xC - EA[0,4];
+	vD128 = zext(*[ram]:4 EA) << (eb * 8);
 }
 
 :lvx128 vD128,xRA0,xRB	is xOP=4 & xMem=12 & xLow2=3 & vD128 & xRA0 & xRB
@@ -131,8 +128,10 @@ macro cmpCR6(v) {
 
 :stvewx128 vD128,xRA0,xRB	is xOP=4 & xMem=24 & xLow2=3 & vD128 & xRA0 & xRB
 {
-	EA:$(REGISTER_SIZE) = (xRA0 + xRB) & 0xfffffffffffffffc;
-	*[ram]:4 EA = storeVectorElementWordIndexed(vD128,xRA0,xRB);
+	EA:$(REGISTER_SIZE) = (xRA0 + xRB) & ~3;
+	eb:1 = 0xC - EA[0,4];
+	tmp:16 = vD128 >> (eb * 8);
+	*[ram]:4 EA = tmp:4;
 }
 
 :stvx128 vD128,xRA0,xRB	is xOP=4 & xMem=28 & xLow2=3 & vD128 & xRA0 & xRB
@@ -179,34 +178,34 @@ macro cmpCR6(v) {
 
 :vperm128 vD128,vA128,vB128,vC128	is xOP=5 & xBit27=0 & xBit22=0 & vD128 & vA128 & vB128 & vC128
 {
-	vD128 = vectorPermute(vA128,vB128,vC128);
+	vD128 = __vperm(vA128,vB128,vC128);
 }
 
-:vpkshss128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=8 & vD128 & vA128 & vB128	{ vD128 = vectorPackSignedHalfWordSignedSaturate(vA128,vB128); }
-:vpkshus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=9 & vD128 & vA128 & vB128	{ vD128 = vectorPackSignedHalfWordUnsignedSaturate(vA128,vB128); }
-:vpkswss128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=10 & vD128 & vA128 & vB128	{ vD128 = vectorPackSignedWordSignedSaturate(vA128,vB128); }
-:vpkswus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=11 & vD128 & vA128 & vB128	{ vD128 = vectorPackSignedWordUnsignedSaturate(vA128,vB128); }
-:vpkuhum128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=12 & vD128 & vA128 & vB128	{ vD128 = vectorPackUnsignedHalfWordUnsignedModulo(vA128,vB128); }
-:vpkuhus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=13 & vD128 & vA128 & vB128	{ vD128 = vectorPackUnsignedHalfWordUnsignedSaturate(vA128,vB128); }
-:vpkuwum128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=14 & vD128 & vA128 & vB128	{ vD128 = vectorPackUnsignedWordUnsignedModulo(vA128,vB128); }
-:vpkuwus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=15 & vD128 & vA128 & vB128	{ vD128 = vectorPackUnsignedWordUnsignedSaturate(vA128,vB128); }
+:vpkshss128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=8 & vD128 & vA128 & vB128	{ vD128 = __vpkshss(vA128,vB128); }
+:vpkshus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=9 & vD128 & vA128 & vB128	{ vD128 = __vpkshus(vA128,vB128); }
+:vpkswss128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=10 & vD128 & vA128 & vB128	{ vD128 = __vpkswss(vA128,vB128); }
+:vpkswus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=11 & vD128 & vA128 & vB128	{ vD128 = __vpkswus(vA128,vB128); }
+:vpkuhum128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=12 & vD128 & vA128 & vB128	{ vD128 = __vpkuhum(vA128,vB128); }
+:vpkuhus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=13 & vD128 & vA128 & vB128	{ vD128 = __vpkuhus(vA128,vB128); }
+:vpkuwum128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=14 & vD128 & vA128 & vB128	{ vD128 = __vpkuwum(vA128,vB128); }
+:vpkuwus128 vD128,vA128,vB128	is xOP=5 & xBit27=0 & xOp=15 & vD128 & vA128 & vB128	{ vD128 = __vpkuwus(vA128,vB128); }
 
-:vaddfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=0 & vD128 & vA128 & vB128	{ vD128 = vectorAddFloatingPoint(vA128,vB128); }
-:vsubfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=1 & vD128 & vA128 & vB128	{ vD128 = vectorSubtractFloatingPoint(vA128,vB128); }
+:vaddfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=0 & vD128 & vA128 & vB128	{ vD128 = __vaddfp(vA128,vB128); }
+:vsubfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=1 & vD128 & vA128 & vB128	{ vD128 = __vsubfp(vA128,vB128); }
 :vmulfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=2 & vD128 & vA128 & vB128	{ vD128 = __vmulfp(vA128,vB128); }
-:vmaddfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=3 & vD128 & vA128 & vB128	{ vD128 = vectorMultiplyAddFloatingPoint(vA128,vB128,vD128); }
-:vmaddcfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=4 & vD128 & vA128 & vB128	{ vD128 = vectorMultiplyAddFloatingPoint(vA128,vD128,vB128); }
-:vnmsubfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=5 & vD128 & vA128 & vB128	{ vD128 = vectorNegativeMultiplySubtractFloatingPoint(vA128,vB128,vD128); }
+:vmaddfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=3 & vD128 & vA128 & vB128	{ vD128 = __vmaddfp(vA128,vB128,vD128); }
+:vmaddcfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=4 & vD128 & vA128 & vB128	{ vD128 = __vmaddfp(vA128,vD128,vB128); }
+:vnmsubfp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=5 & vD128 & vA128 & vB128	{ vD128 = __vnmsubfp(vA128,vB128,vD128); }
 :vmsum3fp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=6 & vD128 & vA128 & vB128	{ vD128 = __vmsum3fp(vA128,vB128); }
 :vmsum4fp128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=7 & vD128 & vA128 & vB128	{ vD128 = __vmsum4fp(vA128,vB128); }
-:vand128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=8 & vD128 & vA128 & vB128	{ vD128 = vectorLogicalAnd(vA128,vB128); }
-:vandc128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=9 & vD128 & vA128 & vB128	{ vD128 = vectorLogicalAndWithComplement(vA128,vB128); }
+:vand128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=8 & vD128 & vA128 & vB128	{ vD128 = __vand(vA128,vB128); }
+:vandc128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=9 & vD128 & vA128 & vB128	{ vD128 = __vandc(vA128,vB128); }
 :vnor128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=10 & vD128 & vA128 & vB128	{ vD128 = ~(vA128 | vB128); }
 :vor128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=11 & vD128 & vA128 & vB128	{ vD128 = vA128 | vB128; }
 :vxor128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=12 & vD128 & vA128 & vB128	{ vD128 = vA128 ^ vB128; }
-:vsel128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=13 & vD128 & vA128 & vB128	{ vD128 = vectorConditionalSelect(vA128,vB128,vD128); }
-:vslo128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=14 & vD128 & vA128 & vB128	{ vD128 = vectorShiftLeftByOctet(vA128,vB128); }
-:vsro128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=15 & vD128 & vA128 & vB128	{ vD128 = vectorShiftRightByOctet(vA128,vB128); }
+:vsel128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=13 & vD128 & vA128 & vB128	{ vD128 = __vsel(vA128,vB128,vD128); }
+:vslo128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=14 & vD128 & vA128 & vB128	{ vD128 = __vslo(vA128,vB128); }
+:vsro128 vD128,vA128,vB128	is xOP=5 & xBit27=1 & xOp=15 & vD128 & vA128 & vB128	{ vD128 = __vsro(vA128,vB128); }
 
 # Primary opcode 6: VPERMWI128, VRLIMI128 and the D3D packs (bits 21-22 and
 # 26-27), the one-operand forms (bits 26-27 set, bits 21-27 select), the
@@ -227,44 +226,44 @@ macro cmpCR6(v) {
 	vD128 = __vpkd3d(vD128,vB128,xType:1,xPack:1,xZ:1);
 }
 
-:vctsxs128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x23 & vD128 & vB128 & xUimm	{ vD128 = vectorConvertToSignedFixedPointWordSaturate(vB128,xUimm:1); }
-:vctuxs128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x27 & vD128 & vB128 & xUimm	{ vD128 = vectorConvertToUnsignedFixedPointWordSaturate(vB128,xUimm:1); }
-:vcfsx128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x2b & vD128 & vB128 & xUimm	{ vD128 = vectorConvertFromSignedFixedPointWord(vB128,xUimm:1); }
-:vcfux128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x2f & vD128 & vB128 & xUimm	{ vD128 = vectorConvertFromUnsignedFixedPointWord(vB128,xUimm:1); }
-:vrfim128 vD128,vB128		is xOP=6 & xOp7=0x33 & vD128 & vB128	{ vD128 = vectorRoundToFloatingPointIntegerTowardMinusInfinity(vB128); }
-:vrfin128 vD128,vB128		is xOP=6 & xOp7=0x37 & vD128 & vB128	{ vD128 = vectorRoundToFloatingPointIntegerNearest(vB128); }
-:vrfip128 vD128,vB128		is xOP=6 & xOp7=0x3b & vD128 & vB128	{ vD128 = vectorRoundToFloatingPointIntegerTowardPluInfinity(vB128); }
-:vrfiz128 vD128,vB128		is xOP=6 & xOp7=0x3f & vD128 & vB128	{ vD128 = vectorRoundToFloatingPointIntegerTowardZero(vB128); }
-:vrefp128 vD128,vB128		is xOP=6 & xOp7=0x63 & vD128 & vB128	{ vD128 = vectorReciprocalEstimateFloatingPoint(vB128); }
-:vrsqrtefp128 vD128,vB128	is xOP=6 & xOp7=0x67 & vD128 & vB128	{ vD128 = vectorReciprocalSquareRootEstimateFloatingPoint(vB128); }
-:vexptefp128 vD128,vB128	is xOP=6 & xOp7=0x6b & vD128 & vB128	{ vD128 = vector2RaisedToTheExponentEstimateFloatingPoint(vB128); }
-:vlogefp128 vD128,vB128		is xOP=6 & xOp7=0x6f & vD128 & vB128	{ vD128 = vectorLog2EstimateFloatingPoint(vB128); }
-:vspltw128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x73 & vD128 & vB128 & xUimm	{ vD128 = vectorSplatWord(vB128,xUimm:1); }
-:vspltisw128 vD128,xSimm	is xOP=6 & xOp7=0x77 & vD128 & xBn=0 & xBh=0 & xSimm	{ vD128 = vectorSplatImmediateSignedWord(xSimm:1); }
+:vctsxs128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x23 & vD128 & vB128 & xUimm	{ vD128 = __vctsxs(vB128,xUimm:1); }
+:vctuxs128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x27 & vD128 & vB128 & xUimm	{ vD128 = __vctuxs(vB128,xUimm:1); }
+:vcfsx128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x2b & vD128 & vB128 & xUimm	{ vD128 = __vcfsx(vB128,xUimm:1); }
+:vcfux128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x2f & vD128 & vB128 & xUimm	{ vD128 = __vcfux(vB128,xUimm:1); }
+:vrfim128 vD128,vB128		is xOP=6 & xOp7=0x33 & vD128 & vB128	{ vD128 = __vrfim(vB128); }
+:vrfin128 vD128,vB128		is xOP=6 & xOp7=0x37 & vD128 & vB128	{ vD128 = __vrfin(vB128); }
+:vrfip128 vD128,vB128		is xOP=6 & xOp7=0x3b & vD128 & vB128	{ vD128 = __vrfip(vB128); }
+:vrfiz128 vD128,vB128		is xOP=6 & xOp7=0x3f & vD128 & vB128	{ vD128 = __vrfiz(vB128); }
+:vrefp128 vD128,vB128		is xOP=6 & xOp7=0x63 & vD128 & vB128	{ vD128 = __vrefp(vB128); }
+:vrsqrtefp128 vD128,vB128	is xOP=6 & xOp7=0x67 & vD128 & vB128	{ vD128 = __vrsqrtefp(vB128); }
+:vexptefp128 vD128,vB128	is xOP=6 & xOp7=0x6b & vD128 & vB128	{ vD128 = __vexptefp(vB128); }
+:vlogefp128 vD128,vB128		is xOP=6 & xOp7=0x6f & vD128 & vB128	{ vD128 = __vlogefp(vB128); }
+:vspltw128 vD128,vB128,xUimm	is xOP=6 & xOp7=0x73 & vD128 & vB128 & xUimm	{ vD128 = __vspltw(vB128,xUimm:1); }
+:vspltisw128 vD128,xSimm	is xOP=6 & xOp7=0x77 & vD128 & xBn=0 & xBh=0 & xSimm	{ vD128 = __vspltisw(xSimm:1); }
 :vupkd3d128 vD128,vB128,xType	is xOP=6 & xOp7=0x7f & vD128 & vB128 & xType	{ vD128 = __vupkd3d(vB128,xType:1); }
 
-:vcmpeqfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=0 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = vectorCompareEqualToFloatingPoint(vA128,vB128); }
-:vcmpeqfp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=0 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = vectorCompareEqualToFloatingPoint(vA128,vB128); cmpCR6(vD128); }
-:vcmpgefp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=1 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = vectorCompareGreaterThanOrEqualToFloatingPoint(vA128,vB128); }
-:vcmpgefp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=1 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = vectorCompareGreaterThanOrEqualToFloatingPoint(vA128,vB128); cmpCR6(vD128); }
-:vcmpgtfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=2 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = vectorCompareGreaterThanFloatingPoint(vA128,vB128); }
-:vcmpgtfp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=2 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = vectorCompareGreaterThanFloatingPoint(vA128,vB128); cmpCR6(vD128); }
-:vcmpbfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=3 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = vectorCompareBoundsFloatingPoint(vA128,vB128); }
-:vcmpbfp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=3 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = vectorCompareBoundsFloatingPoint(vA128,vB128); cr6 = zext(vD128 == 0) << 1; }
-:vcmpequw128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=4 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = vectorCompareEqualToUnsignedWord(vA128,vB128); }
-:vcmpequw128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=4 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = vectorCompareEqualToUnsignedWord(vA128,vB128); cmpCR6(vD128); }
+:vcmpeqfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=0 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = __vcmpeqfp(vA128,vB128); }
+:vcmpeqfp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=0 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = __vcmpeqfp(vA128,vB128); vectorCompareCR6(vD128); }
+:vcmpgefp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=1 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = __vcmpgefp(vA128,vB128); }
+:vcmpgefp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=1 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = __vcmpgefp(vA128,vB128); vectorCompareCR6(vD128); }
+:vcmpgtfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=2 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = __vcmpgtfp(vA128,vB128); }
+:vcmpgtfp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=2 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = __vcmpgtfp(vA128,vB128); vectorCompareCR6(vD128); }
+:vcmpbfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=3 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = __vcmpbfp(vA128,vB128); }
+:vcmpbfp128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=3 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = __vcmpbfp(vA128,vB128); cr6 = zext(vD128 == 0) << 1; }
+:vcmpequw128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=4 & xRc=0 & vD128 & vA128 & vB128	{ vD128 = __vcmpequw(vA128,vB128); }
+:vcmpequw128. vD128,vA128,vB128	is xOP=6 & xBit27=0 & xCmp=4 & xRc=1 & vD128 & vA128 & vB128	{ vD128 = __vcmpequw(vA128,vB128); vectorCompareCR6(vD128); }
 
-:vrlw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=1 & vD128 & vA128 & vB128	{ vD128 = vectorRotateLeftIntegerWord(vA128,vB128); }
-:vslw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=3 & vD128 & vA128 & vB128	{ vD128 = vectorShiftLeftIntegerWord(vA128,vB128); }
-:vsraw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=5 & vD128 & vA128 & vB128	{ vD128 = vectorShiftRightAlgebraicWord(vA128,vB128); }
-:vsrw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=7 & vD128 & vA128 & vB128	{ vD128 = vectorShiftRightWord(vA128,vB128); }
+:vrlw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=1 & vD128 & vA128 & vB128	{ vD128 = __vrlw(vA128,vB128); }
+:vslw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=3 & vD128 & vA128 & vB128	{ vD128 = __vslw(vA128,vB128); }
+:vsraw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=5 & vD128 & vA128 & vB128	{ vD128 = __vsraw(vA128,vB128); }
+:vsrw128 vD128,vA128,vB128	is xOP=6 & xBit27=1 & xOp=7 & vD128 & vA128 & vB128	{ vD128 = __vsrw(vA128,vB128); }
 
-:vmaxfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=10 & vD128 & vA128 & vB128	{ vD128 = vectorMaximumFloatingPoint(vA128,vB128); }
-:vminfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=11 & vD128 & vA128 & vB128	{ vD128 = vectorMinimumFloatingPoint(vA128,vB128); }
-:vmrghw128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=12 & vD128 & vA128 & vB128	{ vD128 = vectorMergeHighWord(vA128,vB128); }
-:vmrglw128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=13 & vD128 & vA128 & vB128	{ vD128 = vectorMergeLowWord(vA128,vB128); }
+:vmaxfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=10 & vD128 & vA128 & vB128	{ vD128 = __vmaxfp(vA128,vB128); }
+:vminfp128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=11 & vD128 & vA128 & vB128	{ vD128 = __vminfp(vA128,vB128); }
+:vmrghw128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=12 & vD128 & vA128 & vB128	{ vD128 = __vmrghw(vA128,vB128); }
+:vmrglw128 vD128,vA128,vB128	is xOP=6 & xBit27=0 & xOp=13 & vD128 & vA128 & vB128	{ vD128 = __vmrglw(vA128,vB128); }
 # vA 0 selects the byte unpacks, vA 96 the halfword ones.
-:vupkhsb128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=14 & xAn=0 & xAh=0 & xAH=0 & vD128 & vB128	{ vD128 = vectorUnpackHighSignedByte(vB128); }
-:vupklsb128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=15 & xAn=0 & xAh=0 & xAH=0 & vD128 & vB128	{ vD128 = vectorUnpackLowSignedByte(vB128); }
-:vupkhsh128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=14 & xAn=0 & xAh=1 & xAH=1 & vD128 & vB128	{ vD128 = vectorUnpackHighSignedHalfWord(vB128); }
-:vupklsh128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=15 & xAn=0 & xAh=1 & xAH=1 & vD128 & vB128	{ vD128 = vectorUnpackLowSignedHalfWord(vB128); }
+:vupkhsb128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=14 & xAn=0 & xAh=0 & xAH=0 & vD128 & vB128	{ vD128 = __vupkhsb(vB128); }
+:vupklsb128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=15 & xAn=0 & xAh=0 & xAH=0 & vD128 & vB128	{ vD128 = __vupklsb(vB128); }
+:vupkhsh128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=14 & xAn=0 & xAh=1 & xAH=1 & vD128 & vB128	{ vD128 = __vupkhsh(vB128); }
+:vupklsh128 vD128,vB128		is xOP=6 & xBit27=0 & xOp=15 & xAn=0 & xAh=1 & xAH=1 & vD128 & vB128	{ vD128 = __vupklsh(vB128); }
