@@ -149,6 +149,18 @@ public:
   virtual void decode(Decoder &decoder) {}
 };
 
+/// \brief GhIDA: a floating-point operation the spec names (a rounding p-code lacks)
+///
+/// Its output and first input are floats of their own sizes.
+class FloatUserOp : public UserPcodeOp {
+public:
+  FloatUserOp(const string &nm,Architecture *g,int4 ind)
+    : UserPcodeOp(nm,g,unspecialized,ind) {}		///< Constructor
+  virtual Datatype *getOutputLocal(const PcodeOp *op) const;
+  virtual Datatype *getInputLocal(const PcodeOp *op,int4 slot) const;
+  virtual void decode(Decoder &decoder) {}
+};
+
 /// \brief A user defined operation that is injected with other p-code
 ///
 /// The system can configure user defined p-code ops as a hook point within the
@@ -341,6 +353,7 @@ public:
 
   UserPcodeOp *registerBuiltin(uint4 i);	///< Make sure an active record exists for the given built-in op
   int4 registerDatatypeOp(const string &nm,Datatype *out,Datatype *in0=(Datatype *)0);	///< GhIDA: add a user op the spec lacks, with its output (and first input) type
+  void registerFloatOp(const string &nm);	///< GhIDA: type a spec's user op as a FloatUserOp
 
   /// Retrieve a segment-op description object by index
   /// \param i is the index

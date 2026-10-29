@@ -2283,6 +2283,31 @@ Datatype *TypeOpSubpiece::getInputCast(const PcodeOp *op,int4 slot,const CastStr
   return (Datatype *)0;		// Never need a cast into a SUBPIECE
 }
 
+Datatype *TypeOpSubpiece::getOutputLocal(const PcodeOp *op) const
+
+{
+  if (unsignedTrunc(op) != (const PcodeOp *)0)
+    return tlst->getBase(op->getOut()->getSize(),TYPE_UINT);
+  return TypeOpFunc::getOutputLocal(op);
+}
+
+/// \brief Return the FLOAT_TRUNC that the given SUBPIECE makes an unsigned conversion
+///
+/// FLOAT_TRUNC converts to a signed integer. A conversion to an unsigned integer is a signed one to
+/// an integer one byte wider (it holds every unsigned value), cut back to the unsigned size, as
+/// FLOAT_INT2FLOAT of an INT_ZEXT converts from one (see TypeOpFloatInt2Float::absorbZext).
+/// \param op is the given SUBPIECE
+/// \return the FLOAT_TRUNC or null
+const PcodeOp *TypeOpSubpiece::unsignedTrunc(const PcodeOp *op)
+
+{
+  const Varnode *vn = op->getIn(0);
+  if (!vn->isWritten() || op->getIn(1)->getOffset() != 0 || vn->getSize() != op->getOut()->getSize() + 1)
+    return (const PcodeOp *)0;
+  const PcodeOp *truncOp = vn->getDef();
+  return truncOp->code() == CPUI_FLOAT_TRUNC ? truncOp : (const PcodeOp *)0;
+}
+
 Datatype *TypeOpSubpiece::getOutputToken(const PcodeOp *op,CastStrategy *castStrategy) const
 
 {

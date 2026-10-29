@@ -900,6 +900,16 @@ void PrintC::opFloatInt2Float(const PcodeOp *op)
 void PrintC::opSubpiece(const PcodeOp *op)
 
 {
+  // GhIDA: a float converted to unsigned, (uint)f.
+  const PcodeOp *truncOp = TypeOpSubpiece::unsignedTrunc(op);
+  if (truncOp != (const PcodeOp *)0 && op->getIn(0)->isImplied()) {
+    if (!option_nocasts) {
+      pushOp(&typecast,op);
+      pushType(op->getOut()->getHighTypeDefFacing());
+    }
+    pushVn(truncOp->getIn(0),op,mods);
+    return;
+  }
   if (op->doesSpecialPrinting()) {		// Special printing means it is a field extraction
     const Varnode *vn = op->getIn(0);
     Datatype *ct = vn->getHighTypeReadFacing(op);

@@ -82,6 +82,20 @@ Datatype *DatatypeUserOp::getInputLocal(const PcodeOp *op,int4 slot) const
   return (Datatype *)0;
 }
 
+Datatype *FloatUserOp::getOutputLocal(const PcodeOp *op) const
+
+{
+  return glb->types->getBase(op->getOut()->getSize(),TYPE_FLOAT);
+}
+
+Datatype *FloatUserOp::getInputLocal(const PcodeOp *op,int4 slot) const
+
+{
+  if (slot != 1)
+    return (Datatype *)0;
+  return glb->types->getBase(op->getIn(slot)->getSize(),TYPE_FLOAT);
+}
+
 void InjectedUserOp::decode(Decoder &decoder)
 
 {
@@ -443,6 +457,17 @@ int4 UserOpManage::registerDatatypeOp(const string &nm,Datatype *out,Datatype *i
   int4 ind = useroplist.size();
   registerOp(new DatatypeUserOp(nm,glb,ind,out,in0));
   return ind;
+}
+
+/// GhIDA: a user op the spec defines for a floating-point operation p-code lacks
+/// (AARCH64's RINT) gets float data-types.  Nothing happens if the spec has no such op.
+/// \param nm is the name of the op
+void UserOpManage::registerFloatOp(const string &nm)
+
+{
+  UserPcodeOp *op = getOp(nm);
+  if (dynamic_cast<UnspecializedPcodeOp *>(op) != (UnspecializedPcodeOp *)0)
+    registerOp(new FloatUserOp(nm,glb,op->getIndex()));
 }
 
 UserPcodeOp *UserOpManage::registerBuiltin(uint4 i)

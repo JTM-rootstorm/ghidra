@@ -805,12 +805,14 @@ class TypeOpSubpiece : public TypeOpFunc {
 public:
   TypeOpSubpiece(TypeFactory *t);			///< Constructor
   virtual Datatype *getInputCast(const PcodeOp *op,int4 slot,const CastStrategy *castStrategy) const;
+  virtual Datatype *getOutputLocal(const PcodeOp *op) const;
   virtual Datatype *getOutputToken(const PcodeOp *op,CastStrategy *castStrategy) const;
   virtual Datatype *propagateType(Datatype *alttype,PcodeOp *op,Varnode *invn,Varnode *outvn,
 				  int4 inslot,int4 outslot);
   virtual string getOperatorName(const PcodeOp *op) const;
   virtual void push(PrintLanguage *lng,const PcodeOp *op,const PcodeOp *readOp) const { lng->opSubpiece(op); }
   static int4 computeByteOffsetForComposite(const PcodeOp *op);
+  static const PcodeOp *unsignedTrunc(const PcodeOp *op);	///< GhIDA: the FLOAT_TRUNC this converts to unsigned
 };
 
 /// \brief Information about the CAST op-code
