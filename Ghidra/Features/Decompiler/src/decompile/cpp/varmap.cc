@@ -749,7 +749,7 @@ void AliasChecker::gatherInternal(void) const
 
   gatherAdditiveBase(spacebase,addBase);
   for(vector<AddBase>::iterator iter=addBase.begin();iter!=addBase.end();++iter) {
-    uintb offset = gatherOffset((*iter).base);
+    uintb offset = space->wrapOffset(gatherOffset((*iter).base));	// A sum in a wider register wraps
     offset = AddrSpace::addressToByte(offset,space->getWordSize()); // Convert to byte offset
     alias.push_back(offset);
     if (direction == 1) {
@@ -815,7 +815,7 @@ void AliasChecker::sortAlias(void) const
 ///
 /// For every sum that involves \b startvn, collect the final result Varnode of the sum.
 /// A sum is any expression involving only the additive operators
-/// INT_ADD, INT_SUB, PTRADD, PTRSUB, and SEGMENTOP.  The routine traverses forward recursively
+/// INT_ADD, INT_SUB, PTRADD, PTRSUB, SEGMENTOP and INT_ZEXT.  The routine traverses forward recursively
 /// through all descendants of \b vn that are additive operations and collects all the roots
 /// of the traversed trees.
 /// \param startvn is the Varnode to trace
@@ -872,6 +872,7 @@ void AliasChecker::gatherAdditiveBase(Varnode *startvn,vector<AddBase> &addbase)
 	// fallthru
       case CPUI_PTRSUB:
       case CPUI_SEGMENTOP:
+      case CPUI_INT_ZEXT:	// A pointer widened to a larger register (32-bit addresses in 64-bit registers)
 	subvn = op->getOut();
 	if (!subvn->isMark()) {
 	  subvn->setMark();
@@ -932,6 +933,9 @@ uintb AliasChecker::gatherOffset(Varnode *vn)
     break;
   case CPUI_SEGMENTOP:
     retval = gatherOffset(def->getIn(2));
+    break;
+  case CPUI_INT_ZEXT:
+    retval = gatherOffset(def->getIn(0));
     break;
   default:
     retval = 0;
