@@ -3290,6 +3290,10 @@ define pcodeop NEON_fcmle;
 define pcodeop NEON_fcmlt;
 define pcodeop NEON_fcvtzs;
 define pcodeop NEON_fcvtzu;
+# frint* and fcvtn* roundings p-code has no operator for (decomp.h defines them).
+define pcodeop RINT;
+define pcodeop ROUNDEVEN;
+define pcodeop TRUNC;
 define pcodeop NEON_fmax;
 define pcodeop NEON_fmaxnm;
 define pcodeop NEON_fmaxnmp;
@@ -3842,30 +3846,14 @@ macro resultflags(result)
 	tmpZR = result == 0;
 }
 
+# The flags of a floating-point comparison: an unordered one (a NaN
+# input) sets C and V and clears N and Z.
 macro fcomp(a, b)
 {
 	NG = a f< b;
 	ZR = a f== b;
-	CY = a f>= b;
-	OV = 0;
-}
-
-# this sets NG, ZR, CY, and OV to the values the processor
-# uses to indicate an unordered comparison.  If at least 
-# one of the inputs is NaN, it skips to the next instruction.
-# A use of this macro should be followed by a use of the
-# fcomp macro, which will set the flags according to an 
-# ordered comparison.  Basically, set the flags to the "unordered"
-# values, check for unordered, and if not set the flags again with
-# fcomp.
-macro ftestNAN(a, b)
-{
-	NG = 0;
-	ZR = 0;
-	CY = 1;
-	OV = 1;
-	tst:1 = nan(a) || nan(b);
-	if (tst) goto inst_next;
+	CY = !(a f< b);
+	OV = nan(a) || nan(b);
 }
 
 macro ROR32(out, val, rotate)
