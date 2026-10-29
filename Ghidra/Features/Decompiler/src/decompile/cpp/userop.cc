@@ -434,14 +434,14 @@ UserPcodeOp *UserOpManage::getOp(const string &nm) const
 /// \param nm is the name of the op
 /// \param out is the data-type of its output
 /// \return the CALLOTHER index of the op, registered once per name
-int4 UserOpManage::registerDatatypeOp(const string &nm,Datatype *out)
+int4 UserOpManage::registerDatatypeOp(const string &nm,Datatype *out,Datatype *in0)
 
 {
   UserPcodeOp *op = getOp(nm);
   if (op != (UserPcodeOp *)0)
     return op->getIndex();
   int4 ind = useroplist.size();
-  registerOp(new DatatypeUserOp(nm,glb,ind,out));
+  registerOp(new DatatypeUserOp(nm,glb,ind,out,in0));
   return ind;
 }
 
