@@ -122,12 +122,7 @@ OpCode get_booleanflip(OpCode opc,bool &reorder)
   case CPUI_FLOAT_NOTEQUAL:
     reorder = false;
     return CPUI_FLOAT_EQUAL;
-  case CPUI_FLOAT_LESS:
-    reorder = true;
-    return CPUI_FLOAT_LESSEQUAL;
-  case CPUI_FLOAT_LESSEQUAL:
-    reorder = true;
-    return CPUI_FLOAT_LESS;
+  // GhIDA: !(a < b) is not b <= a when either is NaN: the negation stays.
   default:
     break;
   }

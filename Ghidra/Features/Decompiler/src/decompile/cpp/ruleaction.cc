@@ -2571,6 +2571,15 @@ int4 RuleTrivialArith::applyOp(PcodeOp *op,Funcdata &data)
   if (op->numInput() != 2) return 0;
   in0 = op->getIn(0);
   in1 = op->getIn(1);
+  // GhIDA: V || !V  =>  true,  V && !V  =>  false
+  if ((op->code() == CPUI_BOOL_OR || op->code() == CPUI_BOOL_AND) &&
+      BooleanMatch::evaluate(in0,in1,1) == BooleanMatch::complementary) {
+    Varnode *res = data.newConstant(1,(op->code() == CPUI_BOOL_OR) ? 1 : 0);
+    data.opRemoveInput(op,1);
+    data.opSetOpcode(op,CPUI_COPY);
+    data.opSetInput(op,res,0);
+    return 1;
+  }
   if (in0 != in1) {		// Inputs must be identical
     if (!in0->isWritten()) return 0;
     if (!in1->isWritten()) return 0;
@@ -2582,17 +2591,31 @@ int4 RuleTrivialArith::applyOp(PcodeOp *op,Funcdata &data)
   case CPUI_INT_SLESS:
   case CPUI_INT_LESS:
   case CPUI_BOOL_XOR:
-  case CPUI_FLOAT_NOTEQUAL:
   case CPUI_FLOAT_LESS:
     vn = data.newConstant(1,0);
     break;
   case CPUI_INT_EQUAL:		// Boolean 1
   case CPUI_INT_SLESSEQUAL:
   case CPUI_INT_LESSEQUAL:
-  case CPUI_FLOAT_EQUAL:
-  case CPUI_FLOAT_LESSEQUAL:
     vn = data.newConstant(1,1);
     break;
+  case CPUI_FLOAT_NOTEQUAL:	// GhIDA: NaN is not equal to itself, V != V => NAN(V)
+    data.opRemoveInput(op,1);
+    data.opSetOpcode(op,CPUI_FLOAT_NAN);
+    return 1;
+  case CPUI_FLOAT_EQUAL:	// V == V => !NAN(V)
+  case CPUI_FLOAT_LESSEQUAL:
+  {
+    PcodeOp *nanop = data.newOp(1,op->getAddr());
+    data.opSetOpcode(nanop,CPUI_FLOAT_NAN);
+    data.opSetInput(nanop,in0,0);
+    vn = data.newUniqueOut(1,nanop);
+    data.opInsertBefore(nanop,op);
+    data.opRemoveInput(op,1);
+    data.opSetOpcode(op,CPUI_BOOL_NEGATE);
+    data.opSetInput(op,vn,0);
+    return 1;
+  }
   case CPUI_INT_XOR:		// Same size 0
     //  case CPUI_INT_SUB:
     vn = data.newConstant(op->getOut()->getSize(),0);
@@ -9850,6 +9873,192 @@ bool RuleIgnoreNan::isAnotherNan(Varnode *vn)
   return (opc == CPUI_FLOAT_NAN);
 }
 
+/// \brief GhIDA: test if the given Varnode is the unordered (or ordered) test of two values
+///
+/// Unordered is NaN operations of each value (bar a constant) joined by BOOL_OR; ordered is its
+/// negation, which may be spread over BOOL_AND (`!NAN(x) && !NAN(y)`).
+/// \param vn is the given Varnode
+/// \param x is the first value
+/// \param y is the second value
+/// \param ordered is \b true to test for the ordered test
+/// \return \b true if \b vn is true exactly when \b x or \b y is NaN (neither is, if \b ordered)
+bool RuleIgnoreNan::isUnordered(Varnode *vn,Varnode *x,Varnode *y,bool ordered)
+
+{
+  bool sawX = x->isConstant();
+  bool sawY = y->isConstant();
+  vector<pair<Varnode *,bool> > todo(1,pair<Varnode *,bool>(vn,ordered));
+  while(!todo.empty()) {
+    Varnode *cur = todo.back().first;
+    bool neg = todo.back().second;
+    todo.pop_back();
+    if (!cur->isWritten()) return false;
+    PcodeOp *op = cur->getDef();
+    if (op->code() == CPUI_BOOL_NEGATE) {
+      todo.push_back(pair<Varnode *,bool>(op->getIn(0),!neg));
+      continue;
+    }
+    if (op->code() == (neg ? CPUI_BOOL_AND : CPUI_BOOL_OR)) {
+      todo.push_back(pair<Varnode *,bool>(op->getIn(0),neg));
+      todo.push_back(pair<Varnode *,bool>(op->getIn(1),neg));
+      continue;
+    }
+    if (op->code() != CPUI_FLOAT_NAN || neg) return false;
+    if (functionalEquality(op->getIn(0),x))
+      sawX = true;
+    else if (functionalEquality(op->getIn(0),y))
+      sawY = true;
+    else
+      return false;
+  }
+  return sawX && sawY;
+}
+
+/// \brief GhIDA: the value of a boolean expression of floating-point comparisons on unordered inputs
+///
+/// Every comparison must be of the same two values, in either order.
+/// \param vn is the expression
+/// \param x is the first value, set by the first comparison found if null
+/// \param y is the second value
+/// \param depth is the depth left to search
+/// \return 0 or 1, or -1 if the expression is not of that form
+int4 RuleIgnoreNan::nanValue(Varnode *vn,Varnode *&x,Varnode *&y,int4 depth)
+
+{
+  if (!vn->isWritten() || depth < 0) return -1;
+  PcodeOp *op = vn->getDef();
+  switch(op->code()) {
+  case CPUI_BOOL_NEGATE:
+  {
+    int4 v = nanValue(op->getIn(0),x,y,depth - 1);
+    return (v < 0) ? -1 : 1 - v;
+  }
+  case CPUI_BOOL_AND:
+  case CPUI_BOOL_OR:
+  {
+    int4 v0 = nanValue(op->getIn(0),x,y,depth - 1);
+    int4 v1 = nanValue(op->getIn(1),x,y,depth - 1);
+    if (v0 < 0 || v1 < 0) return -1;
+    return (op->code() == CPUI_BOOL_AND) ? (v0 & v1) : (v0 | v1);
+  }
+  case CPUI_FLOAT_LESS:
+  case CPUI_FLOAT_LESSEQUAL:
+  case CPUI_FLOAT_EQUAL:
+  case CPUI_FLOAT_NOTEQUAL:
+  {
+    Varnode *a = op->getIn(0);
+    Varnode *b = op->getIn(1);
+    if (x == (Varnode *)0) {
+      x = a;
+      y = b;
+    }
+    else if (!(functionalEquality(a,x) && functionalEquality(b,y)) &&
+	     !(functionalEquality(a,y) && functionalEquality(b,x)))
+      return -1;
+    return (op->code() == CPUI_FLOAT_NOTEQUAL) ? 1 : 0;
+  }
+  default:
+    break;
+  }
+  return -1;
+}
+
+/// \brief GhIDA: an expression equal to the given one on ordered inputs, with the given value on unordered ones
+///
+/// A less-than takes its complement's form where it needs the other value (`x < y` is `!(y <= x)`
+/// but true when unordered); AND and OR need it of one side or both.  New ops go before \b root.
+/// \param vn is the expression (as nanValue() accepts)
+/// \param want is the value wanted on unordered inputs
+/// \param root is the op the new ops go before
+/// \param data is the function
+/// \return the expression, \b vn itself if it already has the value, or null if equality is in the way
+Varnode *RuleIgnoreNan::withNanValue(Varnode *vn,bool want,PcodeOp *root,Funcdata &data)
+
+{
+  Varnode *x = (Varnode *)0;
+  Varnode *y = (Varnode *)0;
+  if (nanValue(vn,x,y,4) == (want ? 1 : 0)) return vn;
+  PcodeOp *op = vn->getDef();
+  OpCode opc = op->code();
+  Varnode *res0,*res1;
+  switch(opc) {
+  case CPUI_BOOL_NEGATE:
+    res0 = withNanValue(op->getIn(0),!want,root,data);
+    if (res0 == (Varnode *)0) return (Varnode *)0;
+    return newBool(CPUI_BOOL_NEGATE,res0,(Varnode *)0,root,data);
+  case CPUI_BOOL_AND:
+  case CPUI_BOOL_OR:
+    if (want == (opc == CPUI_BOOL_AND)) {	// Both sides need it
+      res0 = withNanValue(op->getIn(0),want,root,data);
+      res1 = withNanValue(op->getIn(1),want,root,data);
+      if (res0 == (Varnode *)0 || res1 == (Varnode *)0) return (Varnode *)0;
+    }
+    else {					// One side does
+      res0 = withNanValue(op->getIn(0),want,root,data);
+      res1 = op->getIn(1);
+      if (res0 == (Varnode *)0) {
+	res0 = op->getIn(0);
+	res1 = withNanValue(op->getIn(1),want,root,data);
+	if (res1 == (Varnode *)0) return (Varnode *)0;
+      }
+    }
+    return newBool(opc,res0,res1,root,data);
+  case CPUI_FLOAT_LESS:
+  case CPUI_FLOAT_LESSEQUAL:
+    // Only reached for the value true: !(y <= x), or !(y < x)
+    res0 = newBool((opc == CPUI_FLOAT_LESS) ? CPUI_FLOAT_LESSEQUAL : CPUI_FLOAT_LESS,op->getIn(1),op->getIn(0),root,data);
+    return newBool(CPUI_BOOL_NEGATE,res0,(Varnode *)0,root,data);
+  default:
+    break;
+  }
+  return (Varnode *)0;
+}
+
+/// \brief GhIDA: a new boolean op before the given one
+Varnode *RuleIgnoreNan::newBool(OpCode opc,Varnode *in0,Varnode *in1,PcodeOp *root,Funcdata &data)
+
+{
+  PcodeOp *op = data.newOp((in1 == (Varnode *)0) ? 1 : 2,root->getAddr());
+  data.opSetOpcode(op,opc);
+  Varnode *out = data.newUniqueOut(1,op);
+  data.opSetInput(op,in0,0);
+  if (in1 != (Varnode *)0)
+    data.opSetInput(op,in1,1);
+  data.opInsertBefore(op,root);
+  return out;
+}
+
+/// \brief GhIDA: replace floating-point comparisons combined with their unordered test, exactly
+///
+/// The combination is B (comparisons of two values, possibly joined), or its negation, on
+/// ordered inputs and \b nanValue on unordered ones.  B takes a form with that value (see
+/// withNanValue()) and the unordered test goes.  AARCH64 compares its N flag (x < y) with its V
+/// flag (unordered), and x86's carry flag is `x < y` ORed with unordered: dropping the test would
+/// send NaN inputs the other way.  No form for equality: the caller decides.
+/// \param op is the PcodeOp combining B and the unordered test, replaced with the result
+/// \param bvn is B
+/// \param test is the unordered test, or the ordered one
+/// \param ordered is \b true if \b test is the ordered test
+/// \param negate is \b true if the combination is the negation of B on ordered inputs
+/// \param nanMode is the combination's value on unordered inputs: 0 or 1, 2 for B's own, 3 its opposite
+/// \param data is the function
+/// \return \b true if \b op was replaced
+bool RuleIgnoreNan::replaceExact(PcodeOp *op,Varnode *bvn,Varnode *test,bool ordered,bool negate,int4 nanMode,Funcdata &data)
+
+{
+  Varnode *x = (Varnode *)0;
+  Varnode *y = (Varnode *)0;
+  int4 bNan = nanValue(bvn,x,y,4);
+  if (bNan < 0 || !isUnordered(test,x,y,ordered)) return false;
+  bool want = (nanMode < 2) ? (nanMode == 1) : ((bNan == 1) == (nanMode == 2));
+  Varnode *res = withNanValue(bvn,negate ? !want : want,op,data);
+  if (res == (Varnode *)0) return false;
+  data.opSetOpcode(op,negate ? CPUI_BOOL_NEGATE : CPUI_COPY);
+  while(op->numInput() > 1) data.opRemoveInput(op,1);
+  data.opSetInput(op,res,0);
+  return true;
+}
+
 /// \brief Test if a boolean expression incorporates a floating-point comparison, and remove the NaN data-flow if it does
 ///
 /// The given PcodeOp takes input from a NaN operation through a specific slot. We look for a floating-point comparison
@@ -9872,6 +10081,12 @@ Varnode *RuleIgnoreNan::testForComparison(Varnode *floatVar,PcodeOp *op,int4 slo
 {
   OpCode opc = op->code();
   if (opc == matchCode) {
+    // B || unordered, or B && ordered
+    bool ordered = (matchCode == CPUI_BOOL_AND);
+    if (replaceExact(op,op->getIn(1 - slot),op->getIn(slot),ordered,false,ordered ? 0 : 1,data)) {
+      count += 1;
+      return (Varnode *)0;
+    }
     Varnode *vn = op->getIn(1 - slot);
     if (checkBackForCompare(floatVar,vn)) {
       data.opSetOpcode(op,CPUI_COPY);
@@ -9884,6 +10099,13 @@ Varnode *RuleIgnoreNan::testForComparison(Varnode *floatVar,PcodeOp *op,int4 slo
     }
   }
   else if (opc == CPUI_INT_EQUAL || opc == CPUI_INT_NOTEQUAL) {
+    // B == unordered: !B, or B's own value when unordered; != is B, or the opposite (likewise
+    // with the test negated, the other way round)
+    bool same = (opc == CPUI_INT_EQUAL) == (matchCode == CPUI_BOOL_OR);
+    if (replaceExact(op,op->getIn(1 - slot),op->getIn(slot),matchCode == CPUI_BOOL_AND,same,same ? 2 : 3,data)) {
+      count += 1;
+      return (Varnode *)0;
+    }
     Varnode *vn = op->getIn(1 - slot);
     if (checkBackForCompare(floatVar,vn)) {
       data.opSetInput(op,data.newConstant(1,(matchCode == CPUI_BOOL_OR) ? 0 : 1),slot);

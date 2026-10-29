@@ -3,6 +3,8 @@
 <!--
     Floating-point compare that extracts 2 boolean results directly from the status word.
     Decompiler should be able be able to collapse to a normal less-than-or-equal operation.
+    GhIDA: the status word marks unordered as less and equal too, so the store happens on NaN:
+    !(val1 < val2), not val2 <= val1.
 -->
 <bytechunk space="ram" offset="0x1001516" readonly="true">
             d90500000200d81d0000
@@ -19,7 +21,7 @@
   <com>print C</com>
   <com>quit</com>
 </script>
-<stringmatch name="Status Compare #1" min="1" max="1">if \(val2 &lt;= val1\)</stringmatch>
+<stringmatch name="Status Compare #1" min="1" max="1">if \(!\(val1 &lt; val2\)\)</stringmatch>
 <stringmatch name="Status Compare #2" min="0" max="0">&lt;&lt;</stringmatch>
 <stringmatch name="Status Compare #3" min="0" max="0">\|</stringmatch>
 </decompilertest>

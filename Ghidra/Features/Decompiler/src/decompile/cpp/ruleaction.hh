@@ -1479,6 +1479,11 @@ public:
 class RuleIgnoreNan : public Rule {
   static bool checkBackForCompare(Varnode *floatVar,Varnode *root);
   static bool isAnotherNan(Varnode *vn);
+  static bool isUnordered(Varnode *vn,Varnode *x,Varnode *y,bool ordered);	///< GhIDA
+  static int4 nanValue(Varnode *vn,Varnode *&x,Varnode *&y,int4 depth);	///< GhIDA
+  static Varnode *withNanValue(Varnode *vn,bool want,PcodeOp *root,Funcdata &data);	///< GhIDA
+  static Varnode *newBool(OpCode opc,Varnode *in0,Varnode *in1,PcodeOp *root,Funcdata &data);	///< GhIDA
+  static bool replaceExact(PcodeOp *op,Varnode *bvn,Varnode *test,bool ordered,bool negate,int4 nanMode,Funcdata &data);	///< GhIDA
   static Varnode *testForComparison(Varnode *floatVar,PcodeOp *op,int4 slot,OpCode matchCode,int4 &count,Funcdata &data);
 public:
   RuleIgnoreNan(const string &g) : Rule( g, 0, "ignorenan") {}	///< Constructor
