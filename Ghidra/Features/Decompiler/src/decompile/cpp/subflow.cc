@@ -1062,7 +1062,7 @@ bool SubvariableFlow::canTruncate(ReplaceOp *rop,uintb mask,Varnode *vn) const
 {
   if (aggressive || sextrestrictions) return false;
   if (flowsize < 4) return false;	// Only a word in a wider register, not packed pieces (bitfields)
-  if (rop->opc == CPUI_MULTIEQUAL) return false;	// A truncation cannot be placed on the incoming edge
+  if (rop->opc == CPUI_MULTIEQUAL && !vn->isWritten()) return false;	// Placed after its definition (see addTruncation)
   if (mask != calc_mask(flowsize) || vn->getSize() <= flowsize) return false;
   if (vn->isMark() || vn->isConstant() || vn->isFree()) return false;
   return ((vn->getConsume() & ~mask) != 0);
@@ -1070,7 +1070,8 @@ bool SubvariableFlow::canTruncate(ReplaceOp *rop,uintb mask,Varnode *vn) const
 
 /// \brief Pull the logical value out of an input with a new SUBPIECE
 ///
-/// The SUBPIECE is placed just before the replacement of the operation reading it.
+/// The SUBPIECE is placed just before the replacement of the operation reading it, or after
+/// the input's definition when that operation is a MULTIEQUAL (so it holds on the incoming edge).
 /// \param rop is the logical operation taking the input
 /// \param mask is the set of bits holding the logical value
 /// \param slot is the input slot to the operation
@@ -1080,7 +1081,7 @@ void SubvariableFlow::addTruncation(ReplaceOp *rop,uintb mask,int4 slot,Varnode 
 {
   oplist.emplace_back();
   ReplaceOp *subop = &oplist.back();
-  subop->op = rop->op;
+  subop->op = (rop->opc == CPUI_MULTIEQUAL) ? vn->getDef() : rop->op;
   subop->opc = CPUI_SUBPIECE;
   subop->numparams = 2;
   newvarlist.emplace_back();
@@ -1610,17 +1611,23 @@ int4 RuleSubvarAnd::applyOp(PcodeOp *op,Funcdata &data)
   if (!op->getIn(1)->isConstant()) return 0;
   Varnode *vn = op->getIn(0);
   Varnode *outvn = op->getOut();
+  uintb consume = outvn->getConsume();
+  uintb val = op->getIn(1)->getOffset();
+  // A word or more masked in a wider register (a 32-bit compare of a 64-bit register) is read whole,
+  // but holds only the masked bits
+  if (val >= calc_mask(4) && val < calc_mask(vn->getSize()) && (consume & val) == val)
+    consume = val;
   //  if (vn->getSize() != 1) return 0; // Only for bitsize variables
-  if (outvn->getConsume() != op->getIn(1)->getOffset()) return 0;
-  if ((outvn->getConsume() & 1)==0) return 0;
+  if (consume != val) return 0;
+  if ((consume & 1)==0) return 0;
   uintb cmask;
-  if (outvn->getConsume() == (uintb)1)
+  if (consume == (uintb)1)
     cmask = (uintb)1;
   else {
     cmask = calc_mask(vn->getSize());
     cmask >>=8;
     while(cmask != 0) {
-      if (cmask == outvn->getConsume()) break;
+      if (cmask == consume) break;
       cmask >>=8;
     }
   }
