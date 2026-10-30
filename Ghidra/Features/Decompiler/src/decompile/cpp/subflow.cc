@@ -1022,6 +1022,10 @@ bool SubvariableFlow::traceBackwardSext(ReplaceVarnode *rvn)
 bool SubvariableFlow::createLink(ReplaceOp *rop,uintb mask,int4 slot,Varnode *vn)
 
 {
+  if (rop != (ReplaceOp *)0 && slot != -1 && canTruncate(rop,mask,vn)) {
+    addTruncation(rop,mask,slot,vn);
+    return true;
+  }
   bool inworklist;
   ReplaceVarnode *rep = setReplacement(vn,mask,inworklist);
   if (rep == (ReplaceVarnode *)0) return false;
@@ -1041,6 +1045,56 @@ bool SubvariableFlow::createLink(ReplaceOp *rop,uintb mask,int4 slot,Varnode *vn
   if (inworklist)
     worklist.push_back(rep);
   return true;
+}
+
+/// \brief Can an input to a logical operation be truncated to the logical value, rather than traced
+///
+/// An input whose bits beyond the logical value are also used elsewhere cannot be shrunk itself
+/// (the whole thing is a variable), but the low part of it can still be pulled into the subgraph.
+/// This is how a 64-bit register sum feeding only 32-bit uses becomes a 32-bit sum of truncated
+/// operands (32-bit values computed in 64-bit registers).
+/// \param rop is the logical operation taking the input
+/// \param mask is the set of bits holding the logical value
+/// \param vn is the input Varnode
+/// \return \b true if the input should be truncated
+bool SubvariableFlow::canTruncate(ReplaceOp *rop,uintb mask,Varnode *vn) const
+
+{
+  if (aggressive || sextrestrictions) return false;
+  if (flowsize < 4) return false;	// Only a word in a wider register, not packed pieces (bitfields)
+  if (rop->opc == CPUI_MULTIEQUAL) return false;	// A truncation cannot be placed on the incoming edge
+  if (mask != calc_mask(flowsize) || vn->getSize() <= flowsize) return false;
+  if (vn->isMark() || vn->isConstant() || vn->isFree()) return false;
+  return ((vn->getConsume() & ~mask) != 0);
+}
+
+/// \brief Pull the logical value out of an input with a new SUBPIECE
+///
+/// The SUBPIECE is placed just before the replacement of the operation reading it.
+/// \param rop is the logical operation taking the input
+/// \param mask is the set of bits holding the logical value
+/// \param slot is the input slot to the operation
+/// \param vn is the input Varnode
+void SubvariableFlow::addTruncation(ReplaceOp *rop,uintb mask,int4 slot,Varnode *vn)
+
+{
+  oplist.emplace_back();
+  ReplaceOp *subop = &oplist.back();
+  subop->op = rop->op;
+  subop->opc = CPUI_SUBPIECE;
+  subop->numparams = 2;
+  newvarlist.emplace_back();
+  ReplaceVarnode *whole = &newvarlist.back();
+  whole->vn = vn;
+  whole->replacement = vn;	// Read as it is
+  whole->mask = 0;
+  whole->def = (ReplaceOp *)0;
+  subop->input.push_back(whole);
+  addNewConstant(subop,1,0);
+  createNewOut(subop,mask);
+  while(rop->input.size() <= slot)
+    rop->input.push_back((ReplaceVarnode *)0);
+  rop->input[slot] = subop->output;
 }
 
 /// \brief Extend the logical subgraph through a given comparison operator if possible

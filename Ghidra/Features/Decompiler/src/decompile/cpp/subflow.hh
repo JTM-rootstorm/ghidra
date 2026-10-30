@@ -109,6 +109,8 @@ class SubvariableFlow {
   bool traceBackward(ReplaceVarnode *rvn);	///< Trace the logical data-flow backward for the given subgraph variable
   bool traceForwardSext(ReplaceVarnode *rvn);	///< Trace logical data-flow forward assuming sign-extensions
   bool traceBackwardSext(ReplaceVarnode *rvn);	///< Trace logical data-flow backward assuming sign-extensions
+  bool canTruncate(ReplaceOp *rop,uintb mask,Varnode *vn) const;
+  void addTruncation(ReplaceOp *rop,uintb mask,int4 slot,Varnode *vn);
   bool createLink(ReplaceOp *rop,uintb mask,int4 slot,Varnode *vn);
   bool createCompareBridge(PcodeOp *op,ReplaceVarnode *inrvn,int4 slot,Varnode *othervn);
   void addPush(PcodeOp *pushOp,ReplaceVarnode *rvn);
