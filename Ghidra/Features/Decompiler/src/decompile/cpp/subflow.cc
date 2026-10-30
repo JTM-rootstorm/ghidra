@@ -309,6 +309,22 @@ bool SubvariableFlow::tryCallReturnPush(PcodeOp *op,ReplaceVarnode *rvn)
   return true;
 }
 
+/// \brief Determine if the given INDIRECT holds a value across a call
+///
+/// Such an INDIRECT (not an \e indirect \e creation) is the value from before the call, which the call
+/// may leave in place (a register a compiler keeps live across a callee it knows): the logical value
+/// flows through it as through a COPY.
+/// \param op is the given INDIRECT
+/// \return \b true if the INDIRECT carries its input across a call
+bool SubvariableFlow::isHeldAcrossCall(PcodeOp *op)
+
+{
+  if (op->isIndirectCreation()) return false;
+  Varnode *iopvn = op->getIn(1);
+  if (iopvn->getSpace()->getType() != IPTR_IOP) return false;
+  return PcodeOp::getOpFromConst(iopvn->getAddr())->isCall();
+}
+
 /// \brief Determine if the subgraph variable can act as a switch variable for the given BRANCHIND
 ///
 /// We query the JumpTable associated with the BRANCHIND to see if its switch variable
@@ -429,6 +445,12 @@ bool SubvariableFlow::traceForward(ReplaceVarnode *rvn)
       break;
     case CPUI_INT_ZEXT:
     case CPUI_INT_SEXT:
+      rop = createOpDown(CPUI_COPY,1,op,rvn,0);
+      if (!createLink(rop,rvn->mask,-1,outvn)) return false;
+      hcount += 1;		// Dealt with this descendant
+      break;
+    case CPUI_INDIRECT:
+      if (slot != 0 || !isHeldAcrossCall(op)) return false;
       rop = createOpDown(CPUI_COPY,1,op,rvn,0);
       if (!createLink(rop,rvn->mask,-1,outvn)) return false;
       hcount += 1;		// Dealt with this descendant
@@ -830,6 +852,11 @@ bool SubvariableFlow::traceBackward(ReplaceVarnode *rvn)
     if (tryCallReturnPush(op,rvn))
       return true;
     break;
+  case CPUI_INDIRECT:
+    if (!isHeldAcrossCall(op)) return false;
+    rop = createOp(CPUI_COPY,1,rvn);
+    if (!createLink(rop,rvn->mask,0,op->getIn(0))) return false;
+    return true;
   case CPUI_INT_EQUAL:
   case CPUI_INT_NOTEQUAL:
   case CPUI_INT_SLESS:

@@ -103,6 +103,7 @@ class SubvariableFlow {
   bool tryCallPull(PcodeOp *op,ReplaceVarnode *rvn,int4 slot);
   bool tryReturnPull(PcodeOp *op,ReplaceVarnode *rvn,int4 slot);
   bool tryCallReturnPush(PcodeOp *op,ReplaceVarnode *rvn);
+  static bool isHeldAcrossCall(PcodeOp *op);
   bool trySwitchPull(PcodeOp *op,ReplaceVarnode *rvn);
   bool tryInt2FloatPull(PcodeOp *op,ReplaceVarnode *rvn);
   bool traceForward(ReplaceVarnode *rvn);	///< Trace the logical data-flow forward for the given subgraph variable
