@@ -2081,6 +2081,21 @@ bool Funcdata::ancestorOpUse(int4 maxlevel,const Varnode *invn,
   case CPUI_CALL:
   case CPUI_CALLIND:
     return false;		// A call is never a good indication of a single op use
+  case CPUI_INT_ZEXT:
+  case CPUI_INT_SEXT:
+  {
+    // Nor the extension ActionFuncLink adds to a smaller locked call output
+    // (its low part, once the register around it is pieced together)
+    const Varnode *vn = def->getIn(0);
+    if (vn->isWritten() && vn->getDef()->code() == CPUI_SUBPIECE && vn->getDef()->getIn(1)->getOffset() == 0)
+      vn = vn->getDef()->getIn(0);
+    if (vn->isWritten() && vn->getDef()->code() == CPUI_PIECE)
+      vn = vn->getDef()->getIn(1);
+    if (vn->isWritten() && (vn->getDef()->code() == CPUI_CALL || vn->getDef()->code() == CPUI_CALLIND) &&
+	vn->getDef()->getAddr() == def->getAddr())
+      return false;
+    break;
+  }
   default:
     break;
   }
