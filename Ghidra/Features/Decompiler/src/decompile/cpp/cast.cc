@@ -435,8 +435,8 @@ bool CastStrategyC::isSubpieceCastEndian(Datatype *outtype,Datatype *intype,uint
 
 {
   uint4 tmpoff = offset;
-  if (isbigend)
-    tmpoff = intype->getSize()-1-offset;
+  if (isbigend)		// The piece's last byte, counted from the low end
+    tmpoff = intype->getSize()-outtype->getSize()-offset;
   return isSubpieceCast(outtype,intype,tmpoff);
 }
 
