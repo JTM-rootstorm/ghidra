@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This cspec is based upon the PowerPC 64-bit ELF ABI specification -->
 <!-- Very similar to the PowerPC 64-bit big-endian cspec, but does not reverse justification when
-     assigning odd datatype sizes -->
+     assigning odd datatype sizes, and follows ELFv2 (little-endian Linux): a 32-byte frame header
+     with the TOC saved at 0x18(r1), stack parameters after the 64-byte save area at 0x20 -->
 <compiler_spec>
   <data_organization>
      <machine_alignment value="8" />
@@ -95,7 +96,7 @@
           <register name="r10"/>
         </pentry>
         <pentry minsize="1" maxsize="500" align="8">
-          <addr offset="112" space="stack"/>
+          <addr offset="96" space="stack"/>
         </pentry>
         <rule>
           <datatype name="homogeneous-float-aggregate" maxprimitives="1"/>
@@ -182,9 +183,9 @@
       <pcode inject="uponreturn">
       	<body>
       		# Inject pcode when returning from a function call to place the r2Save
-      		# value into 0x28(r1) which should be restored by the "ld r2,0x28(r1)" 
-      		# which immediately follows calls which comply with the PPC64 ABI spec.
-      		local saveR2ptr = r1 + 0x28;
+      		# value into 0x18(r1) which should be restored by the "ld r2,0x18(r1)" 
+      		# which immediately follows calls which comply with the PPC64 ELFv2 ABI.
+      		local saveR2ptr = r1 + 0x18;
       		*:8 saveR2ptr = r2Save; 
       	</body>
       </pcode>
