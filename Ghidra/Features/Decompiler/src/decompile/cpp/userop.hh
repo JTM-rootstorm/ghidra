@@ -50,7 +50,9 @@ public:
   enum userop_flags {
     annotation_assignment = 1,	///< Displayed as assignment, `in1 = in2`, where the first parameter is an annotation
     no_operator = 2,		///< Don't emit special token, just emit the first input parameter as expression
-    display_string = 4		///< Emit as a string constant
+    display_string = 4,		///< Emit as a string constant
+    pure_value = 8,		///< Output depends only on the inputs: may print inside an expression
+    reads_memory = 16		///< As pure_value, but also reads memory: kept before any store or call
   };
   /// \brief User-op class encoded as an enum
   enum userop_type {
@@ -81,6 +83,9 @@ public:
   const string &getName(void) const { return name; }		///< Get the low-level name of the p-code op
   uint4 getType(void) const { return type; }			///< Get the encoded class type
   int4 getIndex(void) const { return useropindex; }		///< Get the constant id of the op
+  bool isPureValue(void) const { return (flags & pure_value) != 0; }	///< May print inside an expression
+  bool readsMemory(void) const { return (flags & reads_memory) != 0; }	///< Reads memory (implies pure_value)
+  void setFlags(uint4 fl) { flags |= fl; }			///< Set boolean properties
   uint4 getDisplay(void) const {
     return (flags & (annotation_assignment | no_operator | display_string)); }	///< Get display type (0=functional)
   virtual ~UserPcodeOp(void) {}					///< Destructor
@@ -348,6 +353,7 @@ public:
   void initialize(Architecture *g);	///< Initialize description objects for all user defined ops
   int4 numSegmentOps(void) const { return segmentop.size(); }	///< Number of segment operations supported
 
+  int4 numOps(void) const { return useroplist.size(); }	///< GhIDA: number of CALLOTHER indices
   UserPcodeOp *getOp(uint4 i) const;		///< Retrieve a user-op description object by index
   UserPcodeOp *getOp(const string &nm) const;	///< Retrieve description by name
 

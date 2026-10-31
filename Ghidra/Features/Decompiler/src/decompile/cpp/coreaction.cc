@@ -3159,7 +3159,7 @@ int4 ActionNameVars::apply(Funcdata &data)
 /// \param vn is the given Varnode
 /// \param maxref is the maximum number of references to consider before forcing explicitness
 /// \return -1 or -2 if given Varnode should be marked explicit, the number of descendants otherwise
-int4 ActionMarkExplicit::baseExplicit(Varnode *vn,int4 maxref)
+int4 ActionMarkExplicit::baseExplicit(Funcdata &data,Varnode *vn,int4 maxref)
 
 {
   list<PcodeOp *>::const_iterator iter;
@@ -3170,7 +3170,9 @@ int4 ActionMarkExplicit::baseExplicit(Varnode *vn,int4 maxref)
   if (def->isCall()) {
     if ((def->code() == CPUI_NEW)&&(def->numInput() == 1))
       return -2;		// Explicit, but may need special printing
-    return -1;
+    if (def->code() != CPUI_CALLOTHER) return -1;
+    UserPcodeOp *userop = data.getArch()->userops.getOp(def->getIn(0)->getOffset());
+    if (userop == (UserPcodeOp *)0 || (!userop->isPureValue() && !userop->readsMemory())) return -1;
   }
   HighVariable *high = vn->getHigh();
   if ((high!=(HighVariable *)0)&&(high->numInstances()>1)) return -1; // Must not be merged at all
@@ -3406,7 +3408,7 @@ int4 ActionMarkExplicit::apply(Funcdata &data)
   for(viter=data.beginDef();viter!=enditer;++viter) {
     Varnode *vn = *viter;
 
-    int4 desccount = baseExplicit(vn,maxref);
+    int4 desccount = baseExplicit(data,vn,maxref);
     if (desccount < 0) {
       vn->setExplicit();
       count += 1;
@@ -3541,6 +3543,28 @@ bool ActionMarkImplied::checkImpliedCover(Funcdata &data,Varnode *vn)
   int4 i;
 
   op = vn->getDef();
+  UserPcodeOp *userop = (UserPcodeOp *)0;
+  if (op->code() == CPUI_CALLOTHER)
+    userop = data.getArch()->userops.getOp(op->getIn(0)->getOffset());
+  if (op->code() == CPUI_LOAD || (userop != (UserPcodeOp *)0 && userop->readsMemory())) {
+    // Nor past a user op that may store (__stvlx): one with no output
+    list<PcodeOp *>::const_iterator oiter,iterend;
+    iterend = data.endOp(CPUI_CALLOTHER);
+    for(oiter=data.beginOp(CPUI_CALLOTHER);oiter!=iterend;++oiter) {
+      PcodeOp *other = *oiter;
+      if (other->isDead() || other->getOut() != (Varnode *)0) continue;
+      if (vn->getCover()->contain(other,2)) return false;
+    }
+  }
+  if (userop != (UserPcodeOp *)0 && userop->readsMemory()) {
+    // The address is a sum of operands: any store may alias it
+    list<PcodeOp *>::const_iterator oiter,iterend;
+    iterend = data.endOp(CPUI_STORE);
+    for(oiter=data.beginOp(CPUI_STORE);oiter!=iterend;++oiter) {
+      if ((*oiter)->isDead()) continue;
+      if (vn->getCover()->contain(*oiter,2)) return false;
+    }
+  }
   if (op->code() == CPUI_LOAD) { // Check for loads crossing stores
     list<PcodeOp *>::const_iterator oiter,iterend;
     iterend = data.endOp(CPUI_STORE);
@@ -3558,7 +3582,8 @@ bool ActionMarkImplied::checkImpliedCover(Funcdata &data,Varnode *vn)
       }
     }
   }
-  if (op->isCall() || (op->code() == CPUI_LOAD)) { // loads crossing calls
+  if ((op->isCall() && (userop == (UserPcodeOp *)0 || !userop->isPureValue())) ||
+      (op->code() == CPUI_LOAD)) { // loads crossing calls
     for(i=0;i<data.numCalls();++i) {
       callop = data.getCallSpecs(i)->getOp();
       if (vn->getCover()->contain(callop,2)) return false;
