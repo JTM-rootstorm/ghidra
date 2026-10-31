@@ -2214,7 +2214,8 @@ void PrintC::pushMismatchSymbol(const Symbol *sym,int4 off,int4 sz,
   // GhIDA: read it as C would, through a pointer of the access's size at
   // the symbol (an underscored name is declared nowhere)
     Datatype *ct = glb->types->getBase(sz,TYPE_UNKNOWN);
-    string nm = "(*(" + ct->getDisplayName() + " *)&" + sym->getDisplayName() + ")";
+    string tn = ct->getName().empty() ? genericTypeName(ct) : ct->getDisplayName();
+    string nm = "(*(" + tn + " *)&" + sym->getDisplayName() + ")";
     pushAtom(Atom(nm,vartoken,EmitMarkup::var_color,op,vn));
   }
   else
@@ -2363,6 +2364,10 @@ void PrintC::emitPrototypeInputs(const FuncProto *proto)
 {
   int4 sz = proto->numParams();
   
+  // Variadic with no named parameter: C before C23 has no `(...)`; an empty
+  // list takes any arguments.
+  if (sz == 0 && proto->isDotdotdot())
+    return;
   if (sz == 0)
     emit->print(KEYWORD_VOID,EmitMarkup::keyword_color);
   else {
