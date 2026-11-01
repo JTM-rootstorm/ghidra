@@ -5440,7 +5440,10 @@ void FuncCallSpecs::forceSet(Funcdata &data,const FuncProto &fp)
   FuncProto *newproto = new FuncProto();
   newproto->copy(fp);
   data.getOverride().insertProtoOverride(op->getAddr(),newproto);
-  if (lateRestriction(fp,newinput,newoutput)) {
+  // The stack-pointer flow has already used this call's extrapop: a different one needs a restart
+  bool popchange = (fp.getExtraPop() != ProtoModel::extrapop_unknown &&
+		    fp.getExtraPop() != getEffectiveExtraPop());
+  if (!popchange && lateRestriction(fp,newinput,newoutput)) {
     commitNewInputs(data,newinput);
     commitNewOutputs(data,newoutput);
   }
