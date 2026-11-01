@@ -3285,6 +3285,8 @@ void TypeCode::setPrototype(TypeFactory *tfact,const PrototypePieces &sig,Dataty
   proto->updateAllTypes(sig);
   proto->setInputLock(true);
   proto->setOutputLock(true);
+  if (proto->getExtraPop() == ProtoModel::extrapop_unknown)
+    proto->resolveExtraPop();	// As decoding a locked prototype does
 }
 
 /// The prototype is copied in.
