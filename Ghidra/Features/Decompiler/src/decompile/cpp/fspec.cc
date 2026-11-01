@@ -4029,6 +4029,17 @@ void FuncProto::setInjectId(int4 id)
   }
 }
 
+/// The record is merged with the model's list, as an \<unaffected> or \<killedbycall>
+/// override in a prototype's XML is: a function that keeps a register its model kills.
+/// \param range is the storage location
+/// \param type is the new effect (EffectRecord::unaffected, killedbycall, ...)
+void FuncProto::setEffect(const VarnodeData &range,uint4 type)
+
+{
+  effectlist.push_back(EffectRecord(range,type));
+  decodeEffect();
+}
+
 void FuncProto::cancelInjectId(void)
 
 {

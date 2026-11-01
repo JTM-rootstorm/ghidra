@@ -279,6 +279,8 @@ bool PrintLanguage::parentheses(const OpToken *op2)
     if (topToken->precedence > op2->precedence) return true;
     if (topToken->precedence < op2->precedence) return false;
     if (topToken->associative && (topToken == op2)) return false;
+    // GhIDA: (a + b) + c of floats prints as C groups it; a + (b + c) keeps its parentheses
+    if (topToken->leftgroups && (topToken == op2) && (stage == 0)) return false;
     // If operators are adjacent to each other, the
     // operator printed first must be evaluated first
     // In this case op2 must be evaluated first, so we

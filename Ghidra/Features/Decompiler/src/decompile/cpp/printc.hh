@@ -83,6 +83,8 @@ protected:
   static OpToken modulo;		///< The \e modulo operator
   static OpToken binary_plus;		///< The \e binary \e addition operator
   static OpToken binary_minus;		///< The \e binary \e subtraction operator
+  static OpToken float_plus;		///< GhIDA: floating-point \e addition (not associative)
+  static OpToken float_multiply;	///< GhIDA: floating-point \e multiplication (not associative)
   static OpToken shift_left;		///< The \e left \e shift operator
   static OpToken shift_right;		///< The \e right \e shift operator
   static OpToken shift_sright;		///< The signed \e right \e shift operator
@@ -318,9 +320,9 @@ public:
   virtual void opFloatLess(const PcodeOp *op) { opBinary(&less_than,op); }
   virtual void opFloatLessEqual(const PcodeOp *op) { opBinary(&less_equal,op); }
   virtual void opFloatNan(const PcodeOp *op) { opFunc(op); }
-  virtual void opFloatAdd(const PcodeOp *op) { opBinary(&binary_plus,op); }
+  virtual void opFloatAdd(const PcodeOp *op) { opBinary(&float_plus,op); }
   virtual void opFloatDiv(const PcodeOp *op) { opBinary(&divide,op); }
-  virtual void opFloatMult(const PcodeOp *op) { opBinary(&multiply,op); }
+  virtual void opFloatMult(const PcodeOp *op) { opBinary(&float_multiply,op); }
   virtual void opFloatSub(const PcodeOp *op) { opBinary(&binary_minus,op); }
   virtual void opFloatNeg(const PcodeOp *op) { opUnary(&unary_minus,op); }
   virtual void opFloatAbs(const PcodeOp *op) { opFunc(op); }

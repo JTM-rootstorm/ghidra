@@ -3312,6 +3312,56 @@ bool SubfloatFlow::exceedsPrecision(PcodeOp *op)
   return (min > precision);
 }
 
+/// GhIDA: a value computed at the wider precision (x87's `fsub; fst [mem]; fmul`) that
+/// is rounded to \b precision by one use (the store) and used as it is by another (the
+/// multiply, a compare) holds more than \b precision: narrowing it would round both.
+/// A value loaded from the narrower format (no arithmetic on the way) is exact either way.
+/// \param vn is the wider Varnode being traced
+/// \return \b true if \b vn cannot be narrowed
+bool SubfloatFlow::roundedAndReused(Varnode *vn) const
+
+{
+  if (vn->getSize() <= precision) return false;
+  bool rounded = false;
+  bool reused = false;
+  list<PcodeOp *>::const_iterator iter;
+  for(iter=vn->beginDescend();iter!=vn->endDescend();++iter) {
+    PcodeOp *op = *iter;
+    if (op->code() == CPUI_FLOAT_FLOAT2FLOAT && op->getOut()->getSize() <= precision)
+      rounded = true;
+    else
+      reused = true;
+  }
+  if (!rounded || !reused) return false;
+  // Computed: arithmetic, possibly through copies, negations and joins
+  vector<Varnode *> stack(1,vn);
+  set<Varnode *> seen;
+  while(!stack.empty()) {
+    Varnode *cur = stack.back();
+    stack.pop_back();
+    if (!cur->isWritten() || !seen.insert(cur).second || seen.size() > 32) continue;
+    PcodeOp *def = cur->getDef();
+    switch(def->code()) {
+      case CPUI_FLOAT_ADD:
+      case CPUI_FLOAT_SUB:
+      case CPUI_FLOAT_MULT:
+      case CPUI_FLOAT_DIV:
+      case CPUI_FLOAT_SQRT:
+	return true;
+      case CPUI_MULTIEQUAL:
+      case CPUI_COPY:
+      case CPUI_FLOAT_NEG:
+      case CPUI_FLOAT_ABS:
+	for(int4 i=0;i<def->numInput();++i)
+	  stack.push_back(def->getIn(i));
+	break;
+      default:
+	break;
+    }
+  }
+  return false;
+}
+
 /// \brief Create and return a placeholder associated with the given Varnode
 ///
 /// Add the placeholder to the worklist if it hasn't been visited before
@@ -3371,6 +3421,7 @@ bool SubfloatFlow::traceForward(TransformVar *rvn)
 {
   list<PcodeOp *>::const_iterator iter,enditer;
   Varnode *vn = rvn->getOriginal();
+  if (roundedAndReused(vn)) return false;	// GhIDA
   iter = vn->beginDescend();
   enditer = vn->endDescend();
   while(iter != enditer) {

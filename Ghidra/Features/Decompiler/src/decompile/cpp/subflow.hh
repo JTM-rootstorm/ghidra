@@ -401,6 +401,7 @@ class SubfloatFlow : public TransformManager {
   map<PcodeOp *,int4> maxPrecisionMap;	///< Maximum precision flowing into a particular floating-point op
   int4 maxPrecision(Varnode *vn);	///< Calculate maximum floating-point precision reaching a given Varnode
   bool exceedsPrecision(PcodeOp *op);	///< Determine if the given op exceeds our \b precision
+  bool roundedAndReused(Varnode *vn) const;	///< Is a computed value both rounded and used unrounded
   TransformVar *setReplacement(Varnode *vn);
   bool traceForward(TransformVar *rvn);
   bool traceBackward(TransformVar *rvn);

@@ -1400,6 +1400,8 @@ public:
   bool isOutputLocked(void) const { return store->getOutput()->isTypeLocked(); }	///< Is the output data-type locked
   bool isModelLocked(void) const { return ((flags&modellock)!=0); }	///< Is the prototype model for \b this locked
   bool hasCustomStorage(void) const { return ((flags&custom_storage)!=0); }	///< Is \b this a "custom" function prototype
+  /// \brief Toggle whether parameter storage is custom (set per parameter, not by the model)
+  void setCustomStorage(bool val) { flags = val ? (flags|custom_storage) : (flags & ~((uint4)custom_storage)); }
   void setInputLock(bool val);				///< Toggle the data-type lock on input parameters
   void setOutputLock(bool val);				///< Toggle the data-type lock on the return value
 
@@ -1486,6 +1488,7 @@ public:
   void clearInput(void);			///< Clear all input parameters regardless of lock
   void setInjectId(int4 id);			///< Associate a given injection with \b this prototype
   void cancelInjectId(void);			///< Turn-off any in-lining for this function
+  void setEffect(const VarnodeData &range,uint4 type);	///< Override the model's effect on one storage location
 
   void resolveModel(ParamActive *active);
 

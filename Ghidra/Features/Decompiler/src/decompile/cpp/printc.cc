@@ -38,6 +38,8 @@ OpToken PrintC::divide = { "/", "", 2, 54, false, OpToken::binary, 1, 0, (OpToke
 OpToken PrintC::modulo = { "%", "", 2, 54, false, OpToken::binary, 1, 0, (OpToken *)0 };
 OpToken PrintC::binary_plus = { "+", "", 2, 50, true, OpToken::binary, 1, 0, (OpToken *)0 };
 OpToken PrintC::binary_minus = { "-", "", 2, 50, false, OpToken::binary, 1, 0, (OpToken *)0 };
+OpToken PrintC::float_plus = { "+", "", 2, 50, false, OpToken::binary, 1, 0, (OpToken *)0, true };
+OpToken PrintC::float_multiply = { "*", "", 2, 54, false, OpToken::binary, 1, 0, (OpToken *)0, true };
 OpToken PrintC::shift_left = { "<<", "", 2, 46, false, OpToken::binary, 1, 0, (OpToken *)0 };
 OpToken PrintC::shift_right = { ">>", "", 2, 46, false, OpToken::binary, 1, 0, (OpToken *)0 };
 OpToken PrintC::shift_sright = { ">>", "", 2, 46, false, OpToken::binary, 1, 0, (OpToken *)0 };
@@ -2380,8 +2382,18 @@ void PrintC::emitPrototypeInputs(const FuncProto *proto)
 	continue;
       Symbol *sym = param->getSymbol();
       printComma = true;
-      if (sym != (Symbol *)0)
+      if (sym != (Symbol *)0) {
 	emitVarDecl(sym);
+	// GhIDA: custom storage in a register, as a comment the C compiler ignores
+	if (proto->hasCustomStorage() && param->getAddress().getSpace()->getType() == IPTR_PROCESSOR) {
+	  const Translate *trans = param->getAddress().getSpace()->getTrans();
+	  string reg = trans->getRegisterName(param->getAddress().getSpace(),param->getAddress().getOffset(),param->getSize());
+	  for(size_t k=0;k<reg.size();++k)
+	    reg[k] = tolower(reg[k]);
+	  if (!reg.empty())
+	    emit->print("/*@<" + reg + ">*/",EmitMarkup::comment_color);
+	}
+      }
       else {
 	// Emit type without name, if there is no backing symbol
 	pushTypeStart(param->getType(),true);
@@ -2787,7 +2799,13 @@ void PrintC::emitFunctionDeclaration(const Funcdata *fd)
   emitPrototypeOutput(proto,fd);
   emit->spaces(1);
   if (option_convention) {
-    if (fd->getFuncProto().printModelInDecl()) {
+    // GhIDA: parameters in registers the model does not assign, as IDA declares them:
+    // the caller cleans the stack (__usercall) or the callee does (__userpurge)
+    if (proto->hasCustomStorage()) {
+      emit->print(proto->getModelExtraPop() == 4 ? "__usercall" : "__userpurge",Emit::keyword_color);
+      emit->spaces(1);
+    }
+    else if (fd->getFuncProto().printModelInDecl()) {
       Emit::syntax_highlight highlight = fd->getFuncProto().isModelUnknown() ? Emit::error_color : Emit::keyword_color;
       emit->print(fd->getFuncProto().getModelName(),highlight);
       emit->spaces(1);

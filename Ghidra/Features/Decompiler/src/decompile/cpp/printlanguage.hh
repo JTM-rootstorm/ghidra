@@ -101,6 +101,7 @@ public:
   int4 spacing;			///< Spaces to print around operator
   int4 bump;			///< Spaces to indent if we break here
   OpToken *negate;		///< The token representing the negation of this token
+  bool leftgroups = false;	///< GhIDA: not associative, but groups left to right (float +, *)
 };
 
 /// \brief The base class API for emitting a high-level language
