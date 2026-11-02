@@ -524,6 +524,18 @@ void Override::CallReturn::performOverride(const Address &addr,Funcdata &data) c
   if (op == (PcodeOp *)0 || !op->isDead())
     throw LowlevelError("Could not apply CALL_RETURN override");
   OpCode opc = op->code();
+  // GhIDA: a conditional indirect jump (`if (!cond) goto inst_next; goto [CTR]`)
+  // skips past itself; the jump after the skip is the one to override.
+  if (opc == CPUI_CBRANCH) {
+    for(PcodeOpTree::const_iterator iter=data.beginOp(addr);iter!=data.endOp(addr);++iter) {
+      PcodeOp *ind = (*iter).second;
+      if (ind->code() == CPUI_BRANCHIND && ind->isDead()) {
+	op = ind;
+	opc = CPUI_BRANCHIND;
+	break;
+      }
+    }
+  }
   if (opc == CPUI_CBRANCH) {
     // GhIDA: a conditional tail call. The instruction's ops become
     //   CBRANCH <rel: CALL>, cond; BRANCH <rel: end of instruction>;
