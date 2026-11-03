@@ -393,6 +393,46 @@ int4 RuleIntrinsicLanes::applyOp(PcodeOp *op,Funcdata &data)
   return 0;
 }
 
+/// \brief GhIDA: count the values other than zero a tree of PIECEs is built from
+///
+/// \param vn is the root of the tree
+/// \param vars counts the values that are not constants
+/// \param consts counts the constants other than zero
+static void pieceLanes(Varnode *vn,int4 &vars,int4 &consts)
+
+{
+  if (vn->isWritten() && vn->getDef()->code() == CPUI_PIECE) {
+    pieceLanes(vn->getDef()->getIn(0),vars,consts);
+    pieceLanes(vn->getDef()->getIn(1),vars,consts);
+  }
+  else if (!vn->isConstant())
+    vars += 1;
+  else if (vn->getOffset() != 0)
+    consts += 1;
+}
+
+/// \brief GhIDA: test if the given PIECE builds part of a vector (16 bytes or more) lane by lane
+///
+/// A lane that is zero stays a lane: the vector is printed lane by lane, which an extension or
+/// a shift would break up. One value among zeros (x86's scalar in a cleared xmm register) is
+/// an extension still.
+/// \param op is the given PIECE
+/// \return \b true if it, or the chain of PIECEs it alone feeds, makes 16 bytes or more of
+/// two values or a constant other than zero
+static bool vectorPiece(PcodeOp *op)
+
+{
+  Varnode *out = op->getOut();
+  while(out->getSize() < 16) {
+    PcodeOp *read = out->loneDescend();
+    if (read == (PcodeOp *)0 || read->code() != CPUI_PIECE) return false;
+    out = read->getOut();
+  }
+  int4 vars = 0,consts = 0;
+  pieceLanes(out,vars,consts);
+  return vars >= 2 || consts >= 1;
+}
+
 /// \class RulePiece2Zext
 /// \brief Concatenation with 0 becomes an extension:  `V = concat(#0,W)  =>  V = zext(W)`
 void RulePiece2Zext::getOpList(vector<uint4> &oplist) const
@@ -409,6 +449,7 @@ int4 RulePiece2Zext::applyOp(PcodeOp *op,Funcdata &data)
   constvn = op->getIn(0);	// Constant must be most significant bits
   if (!constvn->isConstant()) return 0;	// Must append with constant
   if (constvn->getOffset() != 0) return 0; // of value 0
+  if (vectorPiece(op)) return 0;	// GhIDA: a vector's zero lane
   data.opRemoveInput(op,0);	// Remove the constant
   data.opSetOpcode(op,CPUI_INT_ZEXT);
   return 1;
@@ -5167,6 +5208,7 @@ int4 RuleConcatZero::applyOp(PcodeOp *op,Funcdata &data)
   int4 sa = 8*op->getIn(1)->getSize();
   Varnode *highvn = op->getIn(0);
   if (highvn->isConstant() && highvn->getOffset() == 0) return 0;
+  if (vectorPiece(op)) return 0;	// GhIDA: a vector's zero lane
   PcodeOp *newop = data.newOp(1,op->getAddr());
   Varnode *outvn = data.newUniqueOut(op->getOut()->getSize(),newop);
   data.opSetOpcode(newop,CPUI_INT_ZEXT);
