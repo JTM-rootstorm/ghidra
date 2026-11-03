@@ -1303,8 +1303,14 @@ void ParamListStandard::fillinMap(ParamActive *active) const
     forceNoUse(active,trialStart[i],trialStart[i+1]);
   }
   for(int4 i=0;i<numSection;++i) {
-    // Chains of inactivity override later actives
-    forceInactiveChain(active,2,trialStart[i],trialStart[i+1],resourceStart[i]);
+    // Chains of inactivity override later actives, except on a function's
+    // own stack: nothing but its arguments lies past the return address, so
+    // a slot it reads is one however many before it go unread
+    int4 maxchain = 2;
+    if (!active->isRecoverSubcall() && trialStart[i] < trialStart[i+1] &&
+	active->getTrial(trialStart[i]).getAddress().getSpace()->getType() == IPTR_SPACEBASE)
+      maxchain = active->getNumTrials() + 0x10000;
+    forceInactiveChain(active,maxchain,trialStart[i],trialStart[i+1],resourceStart[i]);
   }
 
   // Mark every active trial as used
