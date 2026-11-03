@@ -496,6 +496,7 @@ int4 PcodeInjectLibrarySleigh::manualCallFixup(const string &name,const string &
   string sourceName = "(manual callfixup name=\"" + name + "\")";
   int4 injectid = allocateInject(sourceName, name, InjectPayload::CALLFIXUP_TYPE);
   InjectPayloadSleigh *payload = (InjectPayloadSleigh *)getPayload(injectid);
+  payload->name = name;		// A decoded payload reads its name, a manual one is given it
   payload->parsestring = snippetstring;
   registerInject(injectid);
   return injectid;
@@ -507,6 +508,7 @@ int4 PcodeInjectLibrarySleigh::manualCallOtherFixup(const string &name,const str
   string sourceName = "<manual callotherfixup name=\"" + name + "\")";
   int4 injectid = allocateInject(sourceName, name, InjectPayload::CALLOTHERFIXUP_TYPE);
   InjectPayloadSleigh *payload = (InjectPayloadSleigh *)getPayload(injectid);
+  payload->name = name;
   for(int4 i=0;i<inname.size();++i)
     payload->inputlist.push_back(InjectParameter(inname[i],0));
   if (outname.size() != 0)
