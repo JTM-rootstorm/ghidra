@@ -269,6 +269,7 @@ public:
   bool testShrink(const Address &newaddr,int4 sz) const;	///< Test if \b this trial can be made smaller
   bool operator<(const ParamTrial &b) const;		///< Sort trials in formal parameter order
   void setFixedPosition(int4 pos) { fixedPosition = pos; }  ///< Set fixed position
+  int4 getFixedPosition(void) const { return fixedPosition; }	///< GhIDA: get the fixed position (-1 if none)
   static bool fixedPositionCompare(const ParamTrial &a, const ParamTrial &b); ///< Sort by fixed position; stable for fixedPosition = -1
 };
 
@@ -1497,7 +1498,14 @@ public:
   /// Trials are sorted and marked as \e used or not.
   /// \param active is the collection of Varnode input trials
   void deriveInputMap(ParamActive *active) const {
-    model->deriveInputMap(active); }
+    model->deriveInputMap(active);
+    // GhIDA: a varargs call's fixed parameters in storage of their own
+    // (IDA's __usercall) have no entry in the model; they are passed all the same
+    if (isDotdotdot() && hasCustomStorage())
+      for(int4 i=0;i<active->getNumTrials();++i)
+	if (active->getTrial(i).getFixedPosition() >= 0)
+	  active->getTrial(i).markUsed();
+  }
 
   /// \brief Given a list of output \e trials, derive the most likely return value for \b this prototype
   ///
