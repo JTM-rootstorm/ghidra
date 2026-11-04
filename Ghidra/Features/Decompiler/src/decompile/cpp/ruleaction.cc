@@ -4550,6 +4550,51 @@ void RuleStoreVarnode::getOpList(vector<uint4> &oplist) const
   oplist.push_back(CPUI_STORE);
 }
 
+/// \brief Does a STORE to the stack hold nothing the function can see
+///
+/// Either the return address a CALL pushes (the callee's, gone when it returns), or a
+/// register a call kills and does not return through (undefined after it).  The return
+/// address only with a 4-byte stack pointer: arguments pushed and popped late (32-bit x86)
+/// put its slot inside argument areas and objects built in place, where it shows; a frame
+/// set up once (x86-64) keeps it below them, where its store bounds the locals above.
+/// \param op is the STORE
+/// \param data is the function
+/// \return \b true if the STORE can be dropped
+bool RuleStoreVarnode::storesNothing(PcodeOp *op,Funcdata &data)
+
+{
+  Varnode *vn = op->getIn(2);
+  if (vn->isWritten() && vn->getDef()->code() == CPUI_COPY && vn->getDef()->getIn(0)->isConstant())
+    vn = vn->getDef()->getIn(0);
+  if (vn->isConstant()) {
+    if (vn->getSize() != 4) return false;
+    // The rest of the CALL instruction: its effects, the loads of its parameters
+    PcodeOp *callop = op->nextOp();
+    while(callop != (PcodeOp *)0 && callop->getAddr() == op->getAddr()) {
+      if (callop->code() == CPUI_CALL || callop->code() == CPUI_CALLIND) {
+	const Address &at(op->getAddr());
+	return (vn->getOffset() == at.getOffset() + data.getArch()->translate->instructionLength(at));
+      }
+      if (callop->code() == CPUI_STORE) return false;
+      callop = callop->nextOp();
+    }
+    return false;
+  }
+  if (!vn->isWritten()) return false;
+  PcodeOp *def = vn->getDef();
+  if (!def->isIndirectCreation() || def->code() != CPUI_INDIRECT) return false;
+  if (vn->getSpace()->getType() != IPTR_PROCESSOR) return false;
+  PcodeOp *callop = PcodeOp::getOpFromConst(def->getIn(1)->getAddr());
+  FuncCallSpecs *fc = data.getCallSpecs(callop);
+  if (fc == (FuncCallSpecs *)0) return false;
+  // Not a value the call might return, even past a prototype that says it returns nothing
+  if (fc->characterizeAsOutput(vn->getAddr(),vn->getSize()) != ParamEntry::no_containment)
+    return false;
+  if (data.getArch()->defaultfp->characterizeAsOutput(vn->getAddr(),vn->getSize()) != ParamEntry::no_containment)
+    return false;
+  return true;
+}
+
 int4 RuleStoreVarnode::applyOp(PcodeOp *op,Funcdata &data)
 
 {
@@ -4564,6 +4609,19 @@ int4 RuleStoreVarnode::applyOp(PcodeOp *op,Funcdata &data)
   offoff = AddrSpace::addressToByte(offoff,baseoff->getWordSize());
   // A store running past the end of a space that cannot wrap stays a STORE
   if (!baseoff->allowsWrappedRange() && baseoff->getHighest() - offoff + 1 < (uintb)size) return 0;
+  if (storesNothing(op,data)) {
+    // The slot keeps whatever it held (MSVC's `push ecx` reserving one after a call)
+    list<PcodeOp *>::iterator iter = op->getBasicIter();
+    while(iter != op->getParent()->beginOp()) {
+      PcodeOp *indop = *(--iter);
+      if (indop->code() != CPUI_INDIRECT) break;
+      if (PcodeOp::getOpFromConst(indop->getIn(1)->getAddr()) != op) continue;
+      data.opRemoveInput(indop,1);
+      data.opSetOpcode(indop,CPUI_COPY);
+    }
+    data.opDestroy(op);
+    return 1;
+  }
   Address addr(baseoff,offoff);
   data.newVarnodeOut(size, addr,op);
   op->getOut()->setStackStore();	// Mark as originally coming from CPUI_STORE
