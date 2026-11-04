@@ -511,7 +511,7 @@ bool FlowInfo::setFallthruBound(Address &bound)
   if (iter!=visited.end())	// Whats the maximum distance we can go
     bound = (*iter).first;
   else
-    bound = eaddr;
+    bound = fallthruEnd();
   return true;
 }
 
@@ -574,7 +574,7 @@ void FlowInfo::fallthru(void)
     if (!fallthruflag) break;
     if (addrlist.empty()) break;
     if (bound <= addrlist.back()) {
-      if (bound == eaddr) {
+      if (bound == fallthruEnd()) {
 	handleOutOfBounds(eaddr,addrlist.back());
 	unprocessed.push_back(addrlist.back());
 	addrlist.pop_back();

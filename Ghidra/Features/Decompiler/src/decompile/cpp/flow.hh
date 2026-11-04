@@ -145,6 +145,8 @@ public:
   FlowInfo(Funcdata &d,PcodeOpBank &o,BlockGraph &b,vector<FuncCallSpecs *> &q);	///< Constructor
   FlowInfo(Funcdata &d,PcodeOpBank &o,BlockGraph &b,vector<FuncCallSpecs *> &q,const FlowInfo *op2);	///< Cloning constructor
   void setRange(const Address &b,const Address &e) { baddr = b; eaddr = e; }	///< Establish the flow bounds
+  /// \brief Where falling through leaves the range: past \e eaddr, its last address, as a branch's target may be
+  Address fallthruEnd(void) const { return (eaddr.getOffset() >= eaddr.getSpace()->getHighest()) ? eaddr : eaddr + 1; }
   void setMaximumInstructions(uint4 max) { insn_max = max; }	///< Set the maximum number of instructions
   void setFlags(uint4 val) { flags |= val; }	///< Enable a specific option
   void clearFlags(uint4 val) { flags &= ~val; }	///< Disable a specific option
