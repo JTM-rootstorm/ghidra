@@ -34,6 +34,7 @@ AttributeId ATTRIB_STACKSHIFT = AttributeId("stackshift",126);
 AttributeId ATTRIB_STRATEGY = AttributeId("strategy",127);
 AttributeId ATTRIB_THISBEFORERETPOINTER = AttributeId("thisbeforeretpointer",128);
 AttributeId ATTRIB_VOIDLOCK = AttributeId("voidlock",129);
+AttributeId ATTRIB_TYPEALIGN = AttributeId("typealign",159);
 
 ElementId ELEM_GROUP = ElementId("group",160);
 ElementId ELEM_INTERNALLIST = ElementId("internallist",161);
@@ -464,6 +465,8 @@ Address ParamEntry::getAddrBySlot(int4 &slotnum,int4 sz,int4 typeAlign, bool jus
     }
   }
   else {
+    if (typeAlignMax != 0 && typeAlign > typeAlignMax)
+      typeAlign = typeAlignMax;	// Slots aligned less than the data-type is in memory (x86 Windows' doubles)
     if (typeAlign > alignment) {
       int4 tmp = (slotnum * alignment) % typeAlign;
       if (tmp != 0)
@@ -505,6 +508,7 @@ void ParamEntry::decode(Decoder &decoder,bool normalstack,bool grouped,list<Para
   size = minsize = -1;		// Must be filled in
   alignment = 0;		// default
   numslots = 1;
+  typeAlignMax = 0;
 
   uint4 elemId = decoder.openElement(ELEM_PENTRY);
   for(;;) {
@@ -521,6 +525,9 @@ void ParamEntry::decode(Decoder &decoder,bool normalstack,bool grouped,list<Para
     }
     else if (attribId == ATTRIB_MAXSIZE) {
       size = decoder.readSignedInteger();
+    }
+    else if (attribId == ATTRIB_TYPEALIGN) {
+      typeAlignMax = decoder.readSignedInteger();
     }
     else if (attribId == ATTRIB_STORAGE || attribId == ATTRIB_METATYPE)
       type = string2typeclass(decoder.readString());

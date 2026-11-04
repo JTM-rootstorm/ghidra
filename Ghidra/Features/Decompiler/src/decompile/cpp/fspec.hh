@@ -43,6 +43,7 @@ extern AttributeId ATTRIB_STACKSHIFT;	///< Marshaling attribute "stackshift"
 extern AttributeId ATTRIB_STRATEGY;	///< Marshaling attribute "strategy"
 extern AttributeId ATTRIB_THISBEFORERETPOINTER;	///< Marshaling attribute "thisbeforeretpointer"
 extern AttributeId ATTRIB_VOIDLOCK;	///< Marshaling attribute "voidlock"
+extern AttributeId ATTRIB_TYPEALIGN;	///< Marshaling attribute "typealign"
 
 extern ElementId ELEM_GROUP;		///< Marshaling element \<group>
 extern ElementId ELEM_INTERNALLIST;	///< Marshaling element \<internallist>
@@ -113,6 +114,7 @@ private:
   int4 minsize;			///< Minimum bytes allowed for the logical value
   int4 alignment;		///< How much alignment (0 means only 1 logical value is allowed)
   int4 numslots;		///< (Maximum) number of slots that can store separate parameters
+  int4 typeAlignMax;		///< Most alignment a data-type gets from slots (0 for no limit)
   JoinRecord *joinrec;		///< Non-null if this is logical variable from joined pieces
   static const ParamEntry *findEntryByStorage(const list<ParamEntry> &entryList,const VarnodeData &vn);
   void resolveFirst(list<ParamEntry> &curList);	///< Mark if \b this is the first ParamEntry in its storage class
