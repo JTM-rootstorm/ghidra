@@ -500,6 +500,7 @@ void ScopeLocal::checkUnaliasedReturn(const vector<uintb> &alias)
   if (retOp == (PcodeOp *)0 || retOp->numInput() < 2) return;
   Varnode *vn = retOp->getIn(1);
   if (vn->getSpace() != space) return;
+  if (vn->isInput()) return;	// A parameter handed back (the hidden return buffer), not a temporary
   // Assume vn is mapped.  Cannot check vn->isMapped() as we are in the middle of restructuring.
   vector<uintb>::const_iterator iter = lower_bound(alias.begin(),alias.end(),vn->getOffset());
   if (iter != alias.end()) {
