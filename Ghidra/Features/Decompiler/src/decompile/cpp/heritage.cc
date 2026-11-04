@@ -1470,7 +1470,8 @@ void Heritage::guardCalls(uint4 fl,const Address &addr,int4 size,vector<Varnode 
     if (fc->isOutputActive() && tryregister) {
       ParamActive *active = fc->getActiveOutput();
       int4 outputCharacter = fc->characterizeAsOutput(transAddr, size);
-      if (outputCharacter != ParamEntry::no_containment) {
+      // A register the callee is known to leave alone holds no result of it
+      if (outputCharacter != ParamEntry::no_containment && effecttype != EffectRecord::unaffected) {
 	if (effecttype != EffectRecord::killedbycall && fc->isAutoKilledByCall())
 	  effecttype = EffectRecord::killedbycall;
 	if (outputCharacter == ParamEntry::contained_by) {
