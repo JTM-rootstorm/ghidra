@@ -338,6 +338,12 @@ Datatype *CastStrategyC::castStandard(Datatype *reqtype,Datatype *curtype,
   }
   switch(reqbase->getMetatype()) {
   case TYPE_UNKNOWN:
+    // GhIDA: C converts the address of a structure, union or array to a pointer to anything
+    // else only with a cast, undefined data of the same size included
+    if (isptr && (curbase->getMetatype() == TYPE_STRUCT || curbase->getMetatype() == TYPE_UNION ||
+		  curbase->getMetatype() == TYPE_ARRAY))
+      return reqtype;
+    return (Datatype *)0;
   case TYPE_PARTIALSTRUCT:	// As they are ultimately stripped, treat partials as undefined
   case TYPE_PARTIALUNION:
     return (Datatype *)0;
