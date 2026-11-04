@@ -4557,6 +4557,10 @@ void RuleStoreVarnode::getOpList(vector<uint4> &oplist) const
 /// address only with a 4-byte stack pointer: arguments pushed and popped late (32-bit x86)
 /// put its slot inside argument areas and objects built in place, where it shows; a frame
 /// set up once (x86-64) keeps it below them, where its store bounds the locals above.
+/// A register killed on any path into the STORE counts too: a value the program can read
+/// is defined on every path that pushes it, so one that is not is a filler on all of them
+/// (MSVC's `push ecx` reserving an object's slots where ECX is `this` on one path).  Only
+/// pushes: a spill may keep a variable live on some of those paths only.
 /// \param op is the STORE
 /// \param data is the function
 /// \return \b true if the STORE can be dropped
@@ -4581,6 +4585,43 @@ bool RuleStoreVarnode::storesNothing(PcodeOp *op,Funcdata &data)
     return false;
   }
   if (!vn->isWritten()) return false;
+  if (vn->getDef()->code() != CPUI_MULTIEQUAL && vn->getDef()->code() != CPUI_COPY)
+    return killedByCall(vn,data);
+  // A push: the instruction moves the stack pointer too
+  const VarnodeData &sp(data.getArch()->getStackSpace()->getSpacebase(0));
+  PcodeOp *spop = op->previousOp();
+  while(spop != (PcodeOp *)0 && spop->getAddr() == op->getAddr()) {
+    Varnode *out = spop->getOut();
+    if (out != (Varnode *)0 && out->getAddr() == sp.getAddr() && out->getSize() == sp.size) break;
+    spop = spop->previousOp();
+  }
+  if (spop == (PcodeOp *)0 || spop->getAddr() != op->getAddr()) return false;
+  // The merges and copies the pushed value comes through, to a register a call killed
+  vector<Varnode *> path(1,vn);
+  set<Varnode *> seen;
+  while(!path.empty()) {
+    vn = path.back();
+    path.pop_back();
+    if (!vn->isWritten() || !seen.insert(vn).second) continue;
+    PcodeOp *def = vn->getDef();
+    if (def->code() == CPUI_MULTIEQUAL || def->code() == CPUI_COPY) {
+      for(int4 i=0;i<def->numInput();++i)
+	path.push_back(def->getIn(i));
+    }
+    else if (killedByCall(vn,data))
+      return true;
+  }
+  return false;
+}
+
+/// \brief Is the given register what a call left in it after killing it
+///
+/// \param vn is the register
+/// \param data is the function
+/// \return \b true if the call does not return through it and nothing else defines it
+bool RuleStoreVarnode::killedByCall(Varnode *vn,Funcdata &data)
+
+{
   PcodeOp *def = vn->getDef();
   if (!def->isIndirectCreation() || def->code() != CPUI_INDIRECT) return false;
   if (vn->getSpace()->getType() != IPTR_PROCESSOR) return false;

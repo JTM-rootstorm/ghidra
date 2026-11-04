@@ -819,6 +819,7 @@ public:
 };
 class RuleStoreVarnode : public Rule {
   static bool storesNothing(PcodeOp *op,Funcdata &data);
+  static bool killedByCall(Varnode *vn,Funcdata &data);
 public:
   RuleStoreVarnode(const string &g) : Rule(g, 0, "storevarnode") {}	///< Constructor
   virtual Rule *clone(const ActionGroupList &grouplist) const {
