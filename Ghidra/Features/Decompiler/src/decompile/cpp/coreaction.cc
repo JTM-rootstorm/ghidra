@@ -2066,6 +2066,27 @@ int4 ActionRestrictLocal::apply(Funcdata &data)
   int4 i;
   vector<EffectRecord>::const_iterator eiter,endeiter;
 
+  // Parameter areas built in place, which stay mapped whichever call's parameters they hold
+  vector<pair<intb,intb> > built;
+  for(i=0;i<data.numCalls();++i) {
+    fc = data.getCallSpecs(i);
+    if (!fc->isInputLocked()) continue;
+    if (fc->getSpacebaseOffset() == FuncCallSpecs::offset_unknown) continue;
+    intb lo = 0,hi = 0,inplace;
+    bool stack = false;
+    for(int4 j=0;j<fc->numParams();++j) {
+      ProtoParameter *param = fc->getParam(j);
+      Address addr = param->getAddress();
+      if (addr.getSpace()->getType() != IPTR_SPACEBASE) continue;
+      uintb raw = addr.getSpace()->wrapOffset(fc->getSpacebaseOffset() + addr.getOffset());
+      intb off = sign_extend((intb)raw,addr.getSpace()->getAddrSize()*8-1);
+      if (!stack || off < lo) lo = off;
+      if (!stack || off + param->getSize() > hi) hi = off + param->getSize();
+      stack = true;
+    }
+    if (stack && fc->builtInPlace(data,lo,hi,inplace))
+      built.push_back(pair<intb,intb>(inplace,hi));
+  }
   for(i=0;i<data.numCalls();++i) {
     fc = data.getCallSpecs(i);
     op = fc->getOp();
@@ -2079,6 +2100,11 @@ int4 ActionRestrictLocal::apply(Funcdata &data)
       spacetype tp = addr.getSpace()->getType();
       if (tp == IPTR_SPACEBASE) {
 	uintb off = addr.getSpace()->wrapOffset(fc->getSpacebaseOffset() + addr.getOffset());
+	intb soff = sign_extend((intb)off,addr.getSpace()->getAddrSize()*8-1);
+	bool inplace = false;
+	for(int4 k=0;k<built.size();++k)
+	  inplace |= soff + param->getSize() > built[k].first && soff < built[k].second;
+	if (inplace) continue;	// Built in place by an earlier call: a local
 	data.getScopeLocal()->markNotMapped(addr.getSpace(),off,param->getSize(),true);
       }
       else if (tp == IPTR_JOIN) {

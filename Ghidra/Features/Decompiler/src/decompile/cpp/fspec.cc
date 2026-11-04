@@ -5632,6 +5632,71 @@ void FuncCallSpecs::checkOutputTrialUse(Funcdata &data,vector<Varnode *> &trialv
   }
 }
 
+/// \brief Find the stack offset a pointer holds, relative to the function's entry stack pointer
+///
+/// The pointer is followed through copies, casts and constant additions back to the input
+/// stack pointer.
+/// \param vn is the pointer
+/// \param base is the input stack pointer
+/// \param off receives the offset (signed)
+/// \return \b true if the pointer is the stack pointer plus a constant
+static bool stackOffsetOf(const Varnode *vn,const Varnode *base,intb &off)
+
+{
+  uintb sum = 0;
+  for(int4 depth=0;depth<16;++depth) {
+    if (vn == base) {
+      off = sign_extend((intb)(sum & calc_mask(base->getSize())),base->getSize()*8-1);
+      return true;
+    }
+    if (!vn->isWritten()) return false;
+    const PcodeOp *def = vn->getDef();
+    OpCode opc = def->code();
+    if (opc == CPUI_COPY || opc == CPUI_CAST)
+      vn = def->getIn(0);
+    else if ((opc == CPUI_INT_ADD || opc == CPUI_PTRSUB) && def->getIn(1)->isConstant()) {
+      sum += def->getIn(1)->getOffset();
+      vn = def->getIn(0);
+    }
+    else
+      return false;
+  }
+  return false;
+}
+
+/// \brief Find the lowest stack offset in \b this call's parameter area that an earlier call is handed
+///
+/// An object passed by value can be built in place: the caller reserves the parameter slots
+/// and an earlier call in the same block (its constructor) writes them through a pointer
+/// (`push ecx; push ecx; mov ecx, esp; call ctor`).  Such slots hold what that call left, not
+/// what was stored to them, so they must stay mapped: a local whose address is taken.
+/// \param data is the calling function
+/// \param lo is the lowest stack offset of the parameters (signed, relative to the caller's spacebase)
+/// \param hi is one past the highest
+/// \param res receives the lowest such offset
+/// \return \b true if there is one
+bool FuncCallSpecs::builtInPlace(Funcdata &data,intb lo,intb hi,intb &res) const
+
+{
+  AddrSpace *spc = data.getArch()->getStackSpace();
+  const Varnode *base = (spc == (AddrSpace *)0) ? (const Varnode *)0 : data.findSpacebaseInput(spc);
+  if (base == (const Varnode *)0) return false;
+  bool found = false;
+  list<PcodeOp *>::const_iterator iter;
+  for(iter=op->getParent()->beginOp();iter!=op->getParent()->endOp() && *iter != op;++iter) {
+    PcodeOp *call = *iter;
+    if (!call->isCall()) continue;
+    for(int4 i=1;i<call->numInput();++i) {
+      intb off;
+      if (!stackOffsetOf(call->getIn(i),base,off) || off < lo || off >= hi) continue;
+      if (!found || off < res)
+	res = off;
+      found = true;
+    }
+  }
+  return found;
+}
+
 /// \brief Set the final input Varnodes to \b this CALL based on ParamActive analysis
 ///
 /// Varnodes that don't look like parameters are removed. Parameters that are unreferenced
@@ -5655,6 +5720,23 @@ void FuncCallSpecs::buildInputFromTrials(Funcdata &data)
     // preserve relative order of variable args
     activeinput.sortFixedPosition();
   }
+
+  // The stack range of the parameters, part of which an earlier call may build in place
+  intb lo = 0,hi = 0,inplace = 0;
+  bool stack = false;
+  if (stackoffset != offset_unknown) {
+    for(int4 i=0;i<activeinput.getNumTrials();++i) {
+      const ParamTrial &paramtrial( activeinput.getTrial(i) );
+      const Address &addr(paramtrial.getAddress());
+      if (!paramtrial.isUsed() || addr.getSpace()->getType() != IPTR_SPACEBASE) continue;
+      intb soff = sign_extend((intb)addr.getSpace()->wrapOffset(stackoffset + addr.getOffset()),
+			      addr.getSpace()->getAddrSize()*8-1);
+      if (!stack || soff < lo) lo = soff;
+      if (!stack || soff + paramtrial.getSize() > hi) hi = soff + paramtrial.getSize();
+      stack = true;
+    }
+  }
+  bool built = stack && builtInPlace(data,lo,hi,inplace);
 
   for(int4 i=0;i<activeinput.getNumTrials();++i) {
     const ParamTrial &paramtrial( activeinput.getTrial(i) );
@@ -5688,8 +5770,8 @@ void FuncCallSpecs::buildInputFromTrials(Funcdata &data)
       }
     }
     newparam.push_back(vn);
-    // Mark the stack range used to pass this parameter as unmapped
-    if (isspacebase)
+    // Mark the stack range used to pass this parameter as unmapped, unless an earlier call builds it
+    if (isspacebase && !(built && sign_extend((intb)off,spc->getAddrSize()*8-1) + sz > inplace))
       data.getScopeLocal()->markNotMapped(spc,off,sz,true);
   }
   data.opSetAllInput(op,newparam); // Set final parameter list
