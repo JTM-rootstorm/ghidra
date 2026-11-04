@@ -1731,7 +1731,8 @@ public:
   void finalInputCheck(void);
   void checkInputTrialUse(Funcdata &data,AliasChecker &aliascheck);
   void checkOutputTrialUse(Funcdata &data,vector<Varnode *> &trialvn);
-  bool builtInPlace(Funcdata &data,intb lo,intb hi,intb &res) const;
+  bool builtInPlace(Funcdata &data,intb lo,intb hi,intb &res,intb &end) const;
+  static void collectBuiltInPlace(Funcdata &data,vector<pair<intb,intb> > &built);
   void buildInputFromTrials(Funcdata &data);
   void buildOutputFromTrials(Funcdata &data,vector<Varnode *> &trialvn);
   int4 getInputBytesConsumed(int4 slot) const;

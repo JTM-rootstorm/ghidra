@@ -5671,37 +5671,152 @@ static bool stackOffsetOf(const Varnode *vn,const Varnode *base,intb &off)
   return false;
 }
 
-/// \brief Find the lowest stack offset in \b this call's parameter area that an earlier call is handed
+/// \brief Does a parameter slot hold nothing pushed for the call: room for an object built in place
+///
+/// The value the call reads there, back through the effects of the calls before it, was
+/// never stored, or a call since freed the slot (popped past it, or took it as its own argument).
+/// \param data is the calling function
+/// \param vn is the call's input at the slot
+/// \param ctors are the calls that build the object
+/// \param off is the slot's stack offset (signed, relative to the caller's spacebase)
+/// \param joins are the joins followed so far
+/// \return \b true if nothing defined was pushed there for the call
+static bool reservedSlot(Funcdata &data,const Varnode *vn,const set<const PcodeOp *> &ctors,intb off,
+			 set<const Varnode *> &joins)
+
+{
+  while(vn->isWritten() && vn->getDef()->code() == CPUI_INDIRECT) {
+    const PcodeOp *iop = PcodeOp::getOpFromConst(vn->getDef()->getIn(1)->getAddr());
+    FuncCallSpecs *fc = (ctors.count(iop) == 0 && iop->isCall()) ? data.getCallSpecs(iop) : (FuncCallSpecs *)0;
+    if (fc != (FuncCallSpecs *)0 && fc->getSpacebaseOffset() != FuncCallSpecs::offset_unknown) {
+      AddrSpace *spc = data.getArch()->getStackSpace();
+      intb sp = sign_extend((intb)fc->getSpacebaseOffset(),spc->getAddrSize()*8-1);
+      int4 pop = fc->getExtraPop();
+      if (pop == ProtoModel::extrapop_unknown)
+	pop = spc->getAddrSize();	// Its return address, at least
+      if (off < sp + pop) return true;	// Below the stack pointer once it returned
+      for(int4 i=1;i<iop->numInput();++i) {	// Its own argument, freed once the caller pops it
+	const Varnode *in = iop->getIn(i);
+	if (in->getSpace() == spc && sign_extend((intb)in->getOffset(),spc->getAddrSize()*8-1) == off)
+	  return true;
+      }
+    }
+    vn = vn->getDef()->getIn(0);
+  }
+  if (vn->isWritten() && vn->getDef()->code() == CPUI_MULTIEQUAL) {	// Built on each path
+    if (!joins.insert(vn).second) return true;	// Around a loop: the other paths decide
+    if (joins.size() > 64) return false;
+    const PcodeOp *join = vn->getDef();
+    for(int4 i=0;i<join->numInput();++i)
+      if (!reservedSlot(data,join->getIn(i),ctors,off,joins)) return false;
+    return true;
+  }
+  return !vn->isWritten();
+}
+
+/// \brief Find the part of \b this call's parameter area that an earlier call builds in place
 ///
 /// An object passed by value can be built in place: the caller reserves the parameter slots
-/// and an earlier call in the same block (its constructor) writes them through a pointer
-/// (`push ecx; push ecx; mov ecx, esp; call ctor`).  Such slots hold what that call left, not
-/// what was stored to them, so they must stay mapped: a local whose address is taken.
+/// and an earlier call in the same block, or on each path into it (its constructor), writes
+/// them through a pointer (`push ecx; push ecx; mov ecx, esp; call ctor`).  Such slots hold
+/// what that call left, not what was stored to them, so they must stay mapped: a local whose
+/// address is taken.  The object runs from the lowest slot the earlier call is handed up to
+/// the first argument pushed for \b this call before it was reserved.
 /// \param data is the calling function
 /// \param lo is the lowest stack offset of the parameters (signed, relative to the caller's spacebase)
 /// \param hi is one past the highest
 /// \param res receives the lowest such offset
+/// \param end receives one past the object's last byte
 /// \return \b true if there is one
-bool FuncCallSpecs::builtInPlace(Funcdata &data,intb lo,intb hi,intb &res) const
+bool FuncCallSpecs::builtInPlace(Funcdata &data,intb lo,intb hi,intb &res,intb &end) const
 
 {
   AddrSpace *spc = data.getArch()->getStackSpace();
   const Varnode *base = (spc == (AddrSpace *)0) ? (const Varnode *)0 : data.findSpacebaseInput(spc);
   if (base == (const Varnode *)0) return false;
   bool found = false;
-  list<PcodeOp *>::const_iterator iter;
-  for(iter=op->getParent()->beginOp();iter!=op->getParent()->endOp() && *iter != op;++iter) {
-    PcodeOp *call = *iter;
-    if (!call->isCall()) continue;
-    for(int4 i=1;i<call->numInput();++i) {
-      intb off;
-      if (!stackOffsetOf(call->getIn(i),base,off) || off < lo || off >= hi) continue;
-      if (!found || off < res)
-	res = off;
-      found = true;
+  set<const PcodeOp *> ctors;
+  const BlockBasic *parent = op->getParent();
+  vector<const BlockBasic *> blocks(1,parent);
+  for(int4 i=0;i<parent->sizeIn();++i)
+    blocks.push_back((const BlockBasic *)parent->getIn(i));
+  for(int4 b=0;b<blocks.size();++b) {
+    list<PcodeOp *>::const_iterator iter;
+    for(iter=blocks[b]->beginOp();iter!=blocks[b]->endOp() && *iter != op;++iter) {
+      PcodeOp *call = *iter;
+      if (!call->isCall()) continue;
+      for(int4 i=1;i<call->numInput();++i) {
+	intb off;
+	if (!stackOffsetOf(call->getIn(i),base,off) || off < lo || off >= hi) continue;
+	if (!found || off < res) {
+	  res = off;
+	  ctors.clear();
+	}
+	if (off == res)
+	  ctors.insert(call);
+	found = true;
+      }
     }
   }
-  return found;
+  if (!found) return false;
+  map<intb,const Varnode *> slots;
+  for(int4 i=1;i<op->numInput();++i) {
+    const Varnode *vn = op->getIn(i);
+    if (vn->getSpace() != spc) continue;
+    slots[sign_extend((intb)vn->getOffset(),spc->getAddrSize()*8-1)] = vn;
+  }
+  end = hi;
+  for(map<intb,const Varnode *>::const_iterator siter=slots.upper_bound(res);siter!=slots.end();++siter) {
+    if ((*siter).first >= hi) break;
+    set<const Varnode *> joins;
+    if (!reservedSlot(data,(*siter).second,ctors,(*siter).first,joins)) {
+      end = (*siter).first;
+      break;
+    }
+  }
+  return true;
+}
+
+/// \brief Collect the parameter areas of all calls in a function that an earlier call builds in place
+///
+/// Each stays mapped whichever call's parameters it also holds: the stack slots of a call
+/// later in the function that pushes its own arguments there.  A call whose inputs are not
+/// locked yet is taken at the stack inputs it has (its trials, or the parameters found).
+/// \param data is the function
+/// \param built receives each area as a range of stack offsets (signed, [first,second))
+void FuncCallSpecs::collectBuiltInPlace(Funcdata &data,vector<pair<intb,intb> > &built)
+
+{
+  for(int4 i=0;i<data.numCalls();++i) {
+    FuncCallSpecs *fc = data.getCallSpecs(i);
+    if (fc->getSpacebaseOffset() == offset_unknown) continue;
+    intb lo = 0,hi = 0,inplace,end;
+    bool stack = false;
+    if (fc->isInputLocked()) {
+      for(int4 j=0;j<fc->numParams();++j) {
+	ProtoParameter *param = fc->getParam(j);
+	Address addr = param->getAddress();
+	if (addr.getSpace()->getType() != IPTR_SPACEBASE) continue;
+	uintb raw = addr.getSpace()->wrapOffset(fc->getSpacebaseOffset() + addr.getOffset());
+	intb off = sign_extend((intb)raw,addr.getSpace()->getAddrSize()*8-1);
+	if (!stack || off < lo) lo = off;
+	if (!stack || off + param->getSize() > hi) hi = off + param->getSize();
+	stack = true;
+      }
+    }
+    else {
+      for(int4 j=1;j<fc->getOp()->numInput();++j) {
+	Varnode *vn = fc->getOp()->getIn(j);
+	if (vn->getSpace()->getType() != IPTR_SPACEBASE) continue;
+	intb off = sign_extend((intb)vn->getOffset(),vn->getSpace()->getAddrSize()*8-1);
+	if (!stack || off < lo) lo = off;
+	if (!stack || off + vn->getSize() > hi) hi = off + vn->getSize();
+	stack = true;
+      }
+    }
+    if (stack && fc->builtInPlace(data,lo,hi,inplace,end))
+      built.push_back(pair<intb,intb>(inplace,end));
+  }
 }
 
 /// \brief Set the final input Varnodes to \b this CALL based on ParamActive analysis
@@ -5729,7 +5844,7 @@ void FuncCallSpecs::buildInputFromTrials(Funcdata &data)
   }
 
   // The stack range of the parameters, part of which an earlier call may build in place
-  intb lo = 0,hi = 0,inplace = 0;
+  intb lo = 0,hi = 0,inplace = 0,inplaceEnd = 0;
   bool stack = false;
   if (stackoffset != offset_unknown) {
     for(int4 i=0;i<activeinput.getNumTrials();++i) {
@@ -5743,7 +5858,9 @@ void FuncCallSpecs::buildInputFromTrials(Funcdata &data)
       stack = true;
     }
   }
-  bool built = stack && builtInPlace(data,lo,hi,inplace);
+  bool built = stack && builtInPlace(data,lo,hi,inplace,inplaceEnd);
+  vector<pair<intb,intb> > others;	// Built in place for another call
+  bool collected = false;
 
   for(int4 i=0;i<activeinput.getNumTrials();++i) {
     const ParamTrial &paramtrial( activeinput.getTrial(i) );
@@ -5778,8 +5895,19 @@ void FuncCallSpecs::buildInputFromTrials(Funcdata &data)
     }
     newparam.push_back(vn);
     // Mark the stack range used to pass this parameter as unmapped, unless an earlier call builds it
-    if (isspacebase && !(built && sign_extend((intb)off,spc->getAddrSize()*8-1) + sz > inplace))
-      data.getScopeLocal()->markNotMapped(spc,off,sz,true);
+    if (isspacebase && !(built && sign_extend((intb)off,spc->getAddrSize()*8-1) + sz > inplace &&
+			 sign_extend((intb)off,spc->getAddrSize()*8-1) < inplaceEnd)) {
+      if (!collected) {
+	collectBuiltInPlace(data,others);
+	collected = true;
+      }
+      intb soff = sign_extend((intb)off,spc->getAddrSize()*8-1);
+      bool other = false;
+      for(int4 k=0;k<others.size();++k)
+	other |= soff + sz > others[k].first && soff < others[k].second;
+      if (!other)
+	data.getScopeLocal()->markNotMapped(spc,off,sz,true);
+    }
   }
   data.opSetAllInput(op,newparam); // Set final parameter list
   activeinput.deleteUnusedTrials();
